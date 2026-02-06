@@ -1,0 +1,510 @@
+2026-02-06 09:02:07,527 - INFO - Using device: cpu
+2026-02-06 09:02:07,527 - INFO - Experiment: dcd_baseline
+2026-02-06 09:02:07,527 - INFO - Loading data...
+2026-02-06 09:02:41,726 - INFO - Using device: cpu
+2026-02-06 09:02:41,726 - INFO - Experiment: dcd_baseline
+2026-02-06 09:02:41,727 - INFO - Creating synthetic C-MAPSS data...
+2026-02-06 09:02:41,746 - INFO - Loading data...
+2026-02-06 09:04:18,326 - INFO - Using device: cpu
+2026-02-06 09:04:18,326 - INFO - Experiment: dcd_baseline
+2026-02-06 09:04:18,326 - INFO - Creating synthetic C-MAPSS data...
+2026-02-06 09:04:18,345 - INFO - Loading data...
+2026-02-06 09:04:18,351 - INFO - Train samples: 914
+2026-02-06 09:04:18,352 - INFO - Val samples: 102
+2026-02-06 09:04:18,352 - INFO - Sensor dim: 14
+2026-02-06 09:04:18,352 - INFO - Creating DCD model...
+2026-02-06 09:04:18,784 - INFO - Starting training...
+2026-02-06 09:04:18,784 - INFO - 
+=== Epoch 1/5 ===
+2026-02-06 09:04:21,492 - INFO - Training loss: 0.5739
+2026-02-06 09:04:21,540 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:04:21,540 - INFO - 
+=== Epoch 2/5 ===
+2026-02-06 09:04:23,961 - INFO - Training loss: 0.3317
+2026-02-06 09:04:23,988 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:04:23,988 - INFO - 
+=== Epoch 3/5 ===
+2026-02-06 09:04:26,419 - INFO - Training loss: 0.3119
+2026-02-06 09:04:26,447 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:04:26,447 - INFO - 
+=== Epoch 4/5 ===
+2026-02-06 09:04:28,929 - INFO - Training loss: 0.2920
+2026-02-06 09:04:28,960 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:04:28,960 - INFO - 
+=== Epoch 5/5 ===
+2026-02-06 09:04:31,523 - INFO - Training loss: 0.2813
+2026-02-06 09:04:31,525 - INFO - Generating 50 samples for evaluation...
+2026-02-06 09:04:34,517 - INFO - Computing diffusion quality metrics...
+2026-02-06 09:04:34,518 - INFO - MPR (Monotonicity Preservation Rate): 0.0000
+2026-02-06 09:04:34,521 - INFO - TSS (Trend Similarity Score): nan
+2026-02-06 09:04:34,521 - INFO - Real data mean: 0.5038, std: 0.1843
+2026-02-06 09:04:34,521 - INFO - Generated mean: 0.0509, std: 2.1629
+2026-02-06 09:04:34,521 - INFO - Eval metrics: MPR=0.0000, TSS=nan
+2026-02-06 09:04:34,625 - INFO - Saved checkpoint: experiments/phase1/logs/checkpoint_epoch_5.pt
+2026-02-06 09:04:34,652 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:04:34,652 - INFO - Training completed!
+2026-02-06 09:05:01,114 - INFO - Using device: cpu
+2026-02-06 09:05:01,114 - INFO - Experiment: dcd_baseline
+2026-02-06 09:05:01,114 - INFO - Loading data...
+2026-02-06 09:05:01,120 - INFO - Train samples: 914
+2026-02-06 09:05:01,120 - INFO - Val samples: 102
+2026-02-06 09:05:01,120 - INFO - Sensor dim: 14
+2026-02-06 09:05:01,120 - INFO - Creating DCD model...
+2026-02-06 09:05:01,528 - INFO - Starting training...
+2026-02-06 09:05:01,528 - INFO - 
+=== Epoch 1/20 ===
+2026-02-06 09:05:03,982 - INFO - Training loss: 0.5243
+2026-02-06 09:05:04,010 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:05:04,010 - INFO - 
+=== Epoch 2/20 ===
+2026-02-06 09:05:06,420 - INFO - Training loss: 0.2915
+2026-02-06 09:05:06,446 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:05:06,446 - INFO - 
+=== Epoch 3/20 ===
+2026-02-06 09:05:08,862 - INFO - Training loss: 0.2403
+2026-02-06 09:05:08,889 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:05:08,889 - INFO - 
+=== Epoch 4/20 ===
+2026-02-06 09:05:11,283 - INFO - Training loss: 0.2397
+2026-02-06 09:05:11,311 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:05:11,311 - INFO - 
+=== Epoch 5/20 ===
+2026-02-06 09:05:13,706 - INFO - Training loss: 0.2227
+2026-02-06 09:05:13,734 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:05:13,734 - INFO - 
+=== Epoch 6/20 ===
+2026-02-06 09:05:16,149 - INFO - Training loss: 0.2167
+2026-02-06 09:05:16,175 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:05:16,175 - INFO - 
+=== Epoch 7/20 ===
+2026-02-06 09:05:18,573 - INFO - Training loss: 0.2116
+2026-02-06 09:05:18,600 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:05:18,600 - INFO - 
+=== Epoch 8/20 ===
+2026-02-06 09:05:21,006 - INFO - Training loss: 0.1990
+2026-02-06 09:05:21,031 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:05:21,032 - INFO - 
+=== Epoch 9/20 ===
+2026-02-06 09:05:23,398 - INFO - Training loss: 0.2108
+2026-02-06 09:05:23,398 - INFO - 
+=== Epoch 10/20 ===
+2026-02-06 09:05:25,795 - INFO - Training loss: 0.1811
+2026-02-06 09:05:25,796 - INFO - Generating 50 samples for evaluation...
+2026-02-06 09:05:31,302 - INFO - Computing diffusion quality metrics...
+2026-02-06 09:05:31,303 - INFO - MPR (Monotonicity Preservation Rate): 0.0000
+2026-02-06 09:05:31,305 - INFO - TSS (Trend Similarity Score): nan
+2026-02-06 09:05:31,305 - INFO - Real data mean: 0.5038, std: 0.1843
+2026-02-06 09:05:31,305 - INFO - Generated mean: 0.0487, std: 3.9236
+2026-02-06 09:05:31,305 - INFO - Eval metrics: MPR=0.0000, TSS=nan
+2026-02-06 09:05:31,403 - INFO - Saved checkpoint: experiments/phase1/logs/checkpoint_epoch_10.pt
+2026-02-06 09:05:31,429 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:05:31,429 - INFO - 
+=== Epoch 11/20 ===
+2026-02-06 09:05:33,818 - INFO - Training loss: 0.1805
+2026-02-06 09:05:33,847 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:05:33,847 - INFO - 
+=== Epoch 12/20 ===
+2026-02-06 09:05:36,231 - INFO - Training loss: 0.1838
+2026-02-06 09:05:36,231 - INFO - 
+=== Epoch 13/20 ===
+2026-02-06 09:05:38,582 - INFO - Training loss: 0.1925
+2026-02-06 09:05:38,582 - INFO - 
+=== Epoch 14/20 ===
+2026-02-06 09:05:41,006 - INFO - Training loss: 0.1795
+2026-02-06 09:05:41,032 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:05:41,032 - INFO - 
+=== Epoch 15/20 ===
+2026-02-06 09:05:43,449 - INFO - Training loss: 0.1726
+2026-02-06 09:05:43,478 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:05:43,478 - INFO - 
+=== Epoch 16/20 ===
+2026-02-06 09:05:45,926 - INFO - Training loss: 0.1846
+2026-02-06 09:05:45,926 - INFO - 
+=== Epoch 17/20 ===
+2026-02-06 09:05:48,287 - INFO - Training loss: 0.1822
+2026-02-06 09:05:48,287 - INFO - 
+=== Epoch 18/20 ===
+2026-02-06 09:05:50,720 - INFO - Training loss: 0.1830
+2026-02-06 09:05:50,721 - INFO - 
+=== Epoch 19/20 ===
+2026-02-06 09:05:53,096 - INFO - Training loss: 0.1731
+2026-02-06 09:05:53,096 - INFO - 
+=== Epoch 20/20 ===
+2026-02-06 09:05:55,542 - INFO - Training loss: 0.1769
+2026-02-06 09:05:55,543 - INFO - Generating 50 samples for evaluation...
+2026-02-06 09:06:01,311 - INFO - Computing diffusion quality metrics...
+2026-02-06 09:06:01,311 - INFO - MPR (Monotonicity Preservation Rate): 0.0000
+2026-02-06 09:06:01,311 - INFO - TSS (Trend Similarity Score): nan
+2026-02-06 09:06:01,311 - INFO - Real data mean: 0.5038, std: 0.1843
+2026-02-06 09:06:01,311 - INFO - Generated mean: 0.0556, std: 3.7953
+2026-02-06 09:06:01,311 - INFO - Eval metrics: MPR=0.0000, TSS=nan
+2026-02-06 09:06:01,407 - INFO - Saved checkpoint: experiments/phase1/logs/checkpoint_epoch_20.pt
+2026-02-06 09:06:01,407 - INFO - Training completed!
+2026-02-06 09:06:01,407 - INFO - 
+=== Final Evaluation ===
+2026-02-06 09:06:01,408 - INFO - Generating 100 samples for evaluation...
+2026-02-06 09:06:12,891 - INFO - Computing diffusion quality metrics...
+2026-02-06 09:06:12,891 - INFO - MPR (Monotonicity Preservation Rate): 0.0000
+2026-02-06 09:06:12,892 - INFO - TSS (Trend Similarity Score): nan
+2026-02-06 09:06:12,892 - INFO - Real data mean: 0.4999, std: 0.1848
+2026-02-06 09:06:12,892 - INFO - Generated mean: 0.0731, std: 3.8248
+2026-02-06 09:06:12,893 - INFO - Results saved to: experiments/phase1/logs/dcd_validation_results.json
+2026-02-06 09:14:37,838 - INFO - Using device: cpu
+2026-02-06 09:14:37,838 - INFO - Experiment: dcd_improved
+2026-02-06 09:14:37,839 - INFO - Loading data...
+2026-02-06 09:14:37,845 - INFO - Train samples: 914
+2026-02-06 09:14:37,845 - INFO - Val samples: 102
+2026-02-06 09:14:37,845 - INFO - Sensor dim: 14
+2026-02-06 09:14:37,845 - INFO - Creating DCD model...
+2026-02-06 09:14:38,291 - INFO - Starting training...
+2026-02-06 09:14:38,291 - INFO - 
+=== Epoch 1/30 ===
+2026-02-06 09:14:41,302 - INFO - Training loss: 0.5219
+2026-02-06 09:14:41,337 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:14:41,337 - INFO - 
+=== Epoch 2/30 ===
+2026-02-06 09:14:44,349 - INFO - Training loss: 0.2772
+2026-02-06 09:14:44,384 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:14:44,384 - INFO - 
+=== Epoch 3/30 ===
+2026-02-06 09:14:47,442 - INFO - Training loss: 0.2450
+2026-02-06 09:14:47,477 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:14:47,477 - INFO - 
+=== Epoch 4/30 ===
+2026-02-06 09:14:50,480 - INFO - Training loss: 0.2318
+2026-02-06 09:14:50,514 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:14:50,515 - INFO - 
+=== Epoch 5/30 ===
+2026-02-06 09:14:53,543 - INFO - Training loss: 0.2158
+2026-02-06 09:14:53,577 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:14:53,577 - INFO - 
+=== Epoch 6/30 ===
+2026-02-06 09:14:56,658 - INFO - Training loss: 0.2068
+2026-02-06 09:14:56,691 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:14:56,691 - INFO - 
+=== Epoch 7/30 ===
+2026-02-06 09:14:59,719 - INFO - Training loss: 0.2008
+2026-02-06 09:14:59,752 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:14:59,753 - INFO - 
+=== Epoch 8/30 ===
+2026-02-06 09:15:02,807 - INFO - Training loss: 0.1966
+2026-02-06 09:15:02,842 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:15:02,842 - INFO - 
+=== Epoch 9/30 ===
+2026-02-06 09:15:05,898 - INFO - Training loss: 0.2065
+2026-02-06 09:15:05,898 - INFO - 
+=== Epoch 10/30 ===
+2026-02-06 09:15:08,896 - INFO - Training loss: 0.1937
+2026-02-06 09:15:08,929 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:15:08,929 - INFO - 
+=== Epoch 11/30 ===
+2026-02-06 09:15:12,018 - INFO - Training loss: 0.1888
+2026-02-06 09:15:12,050 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:15:12,050 - INFO - 
+=== Epoch 12/30 ===
+2026-02-06 09:15:15,121 - INFO - Training loss: 0.2092
+2026-02-06 09:15:15,122 - INFO - 
+=== Epoch 13/30 ===
+2026-02-06 09:15:18,154 - INFO - Training loss: 0.1953
+2026-02-06 09:15:18,154 - INFO - 
+=== Epoch 14/30 ===
+2026-02-06 09:15:21,185 - INFO - Training loss: 0.1765
+2026-02-06 09:15:21,219 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:15:21,219 - INFO - 
+=== Epoch 15/30 ===
+2026-02-06 09:15:24,292 - INFO - Training loss: 0.2016
+2026-02-06 09:15:24,294 - INFO - Generating 50 samples for evaluation...
+2026-02-06 09:15:31,693 - INFO - Computing diffusion quality metrics...
+2026-02-06 09:15:31,693 - INFO - MPR (Monotonicity Preservation Rate): 0.0000
+2026-02-06 09:15:31,695 - INFO - TSS (Trend Similarity Score): nan
+2026-02-06 09:15:31,695 - INFO - Real data mean: 0.5038, std: 0.1843
+2026-02-06 09:15:31,695 - INFO - Generated mean: 0.0541, std: 3.6623
+2026-02-06 09:15:31,695 - INFO - Eval metrics: MPR=0.0000, TSS=nan
+2026-02-06 09:15:31,802 - INFO - Saved checkpoint: experiments/phase1/logs/checkpoint_epoch_15.pt
+2026-02-06 09:15:31,802 - INFO - 
+=== Epoch 16/30 ===
+2026-02-06 09:15:34,865 - INFO - Training loss: 0.1909
+2026-02-06 09:15:34,865 - INFO - 
+=== Epoch 17/30 ===
+2026-02-06 09:15:37,920 - INFO - Training loss: 0.1814
+2026-02-06 09:15:37,920 - INFO - 
+=== Epoch 18/30 ===
+2026-02-06 09:15:40,961 - INFO - Training loss: 0.1750
+2026-02-06 09:15:40,997 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:15:40,997 - INFO - 
+=== Epoch 19/30 ===
+2026-02-06 09:15:44,086 - INFO - Training loss: 0.1859
+2026-02-06 09:15:44,087 - INFO - 
+=== Epoch 20/30 ===
+2026-02-06 09:15:47,153 - INFO - Training loss: 0.1687
+2026-02-06 09:15:47,186 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:15:47,186 - INFO - 
+=== Epoch 21/30 ===
+2026-02-06 09:15:50,225 - INFO - Training loss: 0.1721
+2026-02-06 09:15:50,225 - INFO - 
+=== Epoch 22/30 ===
+2026-02-06 09:15:53,265 - INFO - Training loss: 0.1759
+2026-02-06 09:15:53,265 - INFO - 
+=== Epoch 23/30 ===
+2026-02-06 09:15:56,338 - INFO - Training loss: 0.1714
+2026-02-06 09:15:56,338 - INFO - 
+=== Epoch 24/30 ===
+2026-02-06 09:15:59,392 - INFO - Training loss: 0.1761
+2026-02-06 09:15:59,392 - INFO - 
+=== Epoch 25/30 ===
+2026-02-06 09:16:02,467 - INFO - Training loss: 0.1680
+2026-02-06 09:16:02,502 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:16:02,502 - INFO - 
+=== Epoch 26/30 ===
+2026-02-06 09:16:05,580 - INFO - Training loss: 0.1724
+2026-02-06 09:16:05,580 - INFO - 
+=== Epoch 27/30 ===
+2026-02-06 09:16:08,632 - INFO - Training loss: 0.1708
+2026-02-06 09:16:08,632 - INFO - 
+=== Epoch 28/30 ===
+2026-02-06 09:16:11,686 - INFO - Training loss: 0.1519
+2026-02-06 09:16:11,719 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:16:11,719 - INFO - 
+=== Epoch 29/30 ===
+2026-02-06 09:16:14,847 - INFO - Training loss: 0.1658
+2026-02-06 09:16:14,848 - INFO - 
+=== Epoch 30/30 ===
+2026-02-06 09:16:17,903 - INFO - Training loss: 0.1813
+2026-02-06 09:16:17,904 - INFO - Generating 50 samples for evaluation...
+2026-02-06 09:16:25,581 - INFO - Computing diffusion quality metrics...
+2026-02-06 09:16:25,581 - INFO - MPR (Monotonicity Preservation Rate): 0.0000
+2026-02-06 09:16:25,582 - INFO - TSS (Trend Similarity Score): nan
+2026-02-06 09:16:25,582 - INFO - Real data mean: 0.5038, std: 0.1843
+2026-02-06 09:16:25,582 - INFO - Generated mean: 0.0737, std: 3.3337
+2026-02-06 09:16:25,582 - INFO - Eval metrics: MPR=0.0000, TSS=nan
+2026-02-06 09:16:25,704 - INFO - Saved checkpoint: experiments/phase1/logs/checkpoint_epoch_30.pt
+2026-02-06 09:16:25,704 - INFO - Training completed!
+2026-02-06 09:16:25,704 - INFO - 
+=== Final Evaluation ===
+2026-02-06 09:16:25,706 - INFO - Generating 100 samples for evaluation...
+2026-02-06 09:16:40,307 - INFO - Computing diffusion quality metrics...
+2026-02-06 09:16:40,307 - INFO - MPR (Monotonicity Preservation Rate): 0.0000
+2026-02-06 09:16:40,308 - INFO - TSS (Trend Similarity Score): nan
+2026-02-06 09:16:40,308 - INFO - Real data mean: 0.4999, std: 0.1848
+2026-02-06 09:16:40,308 - INFO - Generated mean: 0.0475, std: 3.3414
+2026-02-06 09:16:40,309 - INFO - Results saved to: experiments/phase1/logs/dcd_validation_results.json
+2026-02-06 09:48:35,156 - INFO - Using device: cpu
+2026-02-06 09:48:35,157 - INFO - Experiment: dcd_baseline
+2026-02-06 09:48:35,157 - INFO - Loading data...
+2026-02-06 09:48:35,164 - INFO - Train samples: 914
+2026-02-06 09:48:35,165 - INFO - Val samples: 102
+2026-02-06 09:48:35,165 - INFO - Sensor dim: 14
+2026-02-06 09:48:35,165 - INFO - Creating DCD model...
+2026-02-06 09:48:35,598 - INFO - Starting training...
+2026-02-06 09:48:35,598 - INFO - 
+=== Epoch 1/50 ===
+2026-02-06 09:48:38,313 - INFO - Training loss: 0.5887
+2026-02-06 09:48:38,347 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:48:38,347 - INFO - 
+=== Epoch 2/50 ===
+2026-02-06 09:48:41,166 - INFO - Training loss: 0.3372
+2026-02-06 09:48:41,199 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:48:41,199 - INFO - 
+=== Epoch 3/50 ===
+2026-02-06 09:48:43,961 - INFO - Training loss: 0.3221
+2026-02-06 09:48:43,994 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:48:43,994 - INFO - 
+=== Epoch 4/50 ===
+2026-02-06 09:48:46,781 - INFO - Training loss: 0.2947
+2026-02-06 09:48:46,814 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:48:46,814 - INFO - 
+=== Epoch 5/50 ===
+2026-02-06 09:48:49,650 - INFO - Training loss: 0.2951
+2026-02-06 09:48:49,650 - INFO - 
+=== Epoch 6/50 ===
+2026-02-06 09:48:52,491 - INFO - Training loss: 0.2831
+2026-02-06 09:48:52,524 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:48:52,524 - INFO - 
+=== Epoch 7/50 ===
+2026-02-06 09:48:55,273 - INFO - Training loss: 0.2664
+2026-02-06 09:48:55,304 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:48:55,304 - INFO - 
+=== Epoch 8/50 ===
+2026-02-06 09:48:58,051 - INFO - Training loss: 0.2690
+2026-02-06 09:48:58,051 - INFO - 
+=== Epoch 9/50 ===
+2026-02-06 09:49:00,933 - INFO - Training loss: 0.2496
+2026-02-06 09:49:00,965 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:49:00,965 - INFO - 
+=== Epoch 10/50 ===
+2026-02-06 09:49:03,818 - INFO - Training loss: 0.2635
+2026-02-06 09:49:03,819 - INFO - Generating 50 samples for evaluation...
+2026-02-06 09:49:07,424 - INFO - Computing diffusion quality metrics...
+2026-02-06 09:49:07,424 - INFO - MPR (Monotonicity Preservation Rate): 0.0000
+2026-02-06 09:49:07,426 - INFO - TSS (Trend Similarity Score): nan
+2026-02-06 09:49:07,426 - INFO - Real data mean: 0.5038, std: 0.1843
+2026-02-06 09:49:07,426 - INFO - Generated mean: 0.1987, std: 2.0644
+2026-02-06 09:49:07,426 - INFO - Eval metrics: MPR=0.0000, TSS=nan
+2026-02-06 09:49:07,427 - INFO - 
+=== Epoch 11/50 ===
+2026-02-06 09:49:10,280 - INFO - Training loss: 0.2494
+2026-02-06 09:49:10,312 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:49:10,312 - INFO - 
+=== Epoch 12/50 ===
+2026-02-06 09:49:13,135 - INFO - Training loss: 0.2406
+2026-02-06 09:49:13,167 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:49:13,167 - INFO - 
+=== Epoch 13/50 ===
+2026-02-06 09:49:16,012 - INFO - Training loss: 0.2557
+2026-02-06 09:49:16,013 - INFO - 
+=== Epoch 14/50 ===
+2026-02-06 09:49:18,832 - INFO - Training loss: 0.2283
+2026-02-06 09:49:18,865 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:49:18,865 - INFO - 
+=== Epoch 15/50 ===
+2026-02-06 09:49:21,666 - INFO - Training loss: 0.2570
+2026-02-06 09:49:21,666 - INFO - 
+=== Epoch 16/50 ===
+2026-02-06 09:49:24,453 - INFO - Training loss: 0.2346
+2026-02-06 09:49:24,453 - INFO - 
+=== Epoch 17/50 ===
+2026-02-06 09:49:27,271 - INFO - Training loss: 0.2561
+2026-02-06 09:49:27,271 - INFO - 
+=== Epoch 18/50 ===
+2026-02-06 09:49:30,071 - INFO - Training loss: 0.2397
+2026-02-06 09:49:30,071 - INFO - 
+=== Epoch 19/50 ===
+2026-02-06 09:49:32,918 - INFO - Training loss: 0.2305
+2026-02-06 09:49:32,918 - INFO - 
+=== Epoch 20/50 ===
+2026-02-06 09:49:35,752 - INFO - Training loss: 0.2265
+2026-02-06 09:49:35,753 - INFO - Generating 50 samples for evaluation...
+2026-02-06 09:49:39,098 - INFO - Computing diffusion quality metrics...
+2026-02-06 09:49:39,098 - INFO - MPR (Monotonicity Preservation Rate): 0.0000
+2026-02-06 09:49:39,098 - INFO - TSS (Trend Similarity Score): nan
+2026-02-06 09:49:39,098 - INFO - Real data mean: 0.5038, std: 0.1843
+2026-02-06 09:49:39,098 - INFO - Generated mean: 0.2128, std: 1.9535
+2026-02-06 09:49:39,098 - INFO - Eval metrics: MPR=0.0000, TSS=nan
+2026-02-06 09:49:39,164 - INFO - Saved checkpoint: experiments/phase1/logs/checkpoint_epoch_20.pt
+2026-02-06 09:49:39,200 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:49:39,200 - INFO - 
+=== Epoch 21/50 ===
+2026-02-06 09:49:42,064 - INFO - Training loss: 0.2282
+2026-02-06 09:49:42,064 - INFO - 
+=== Epoch 22/50 ===
+2026-02-06 09:49:44,881 - INFO - Training loss: 0.2302
+2026-02-06 09:49:44,881 - INFO - 
+=== Epoch 23/50 ===
+2026-02-06 09:49:47,661 - INFO - Training loss: 0.2328
+2026-02-06 09:49:47,662 - INFO - 
+=== Epoch 24/50 ===
+2026-02-06 09:49:50,461 - INFO - Training loss: 0.2388
+2026-02-06 09:49:50,461 - INFO - 
+=== Epoch 25/50 ===
+2026-02-06 09:49:53,294 - INFO - Training loss: 0.2417
+2026-02-06 09:49:53,294 - INFO - 
+=== Epoch 26/50 ===
+2026-02-06 09:49:56,036 - INFO - Training loss: 0.2298
+2026-02-06 09:49:56,036 - INFO - 
+=== Epoch 27/50 ===
+2026-02-06 09:49:58,559 - INFO - Training loss: 0.2435
+2026-02-06 09:49:58,559 - INFO - 
+=== Epoch 28/50 ===
+2026-02-06 09:50:01,179 - INFO - Training loss: 0.2343
+2026-02-06 09:50:01,179 - INFO - 
+=== Epoch 29/50 ===
+2026-02-06 09:50:03,703 - INFO - Training loss: 0.2188
+2026-02-06 09:50:03,733 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:50:03,733 - INFO - 
+=== Epoch 30/50 ===
+2026-02-06 09:50:06,277 - INFO - Training loss: 0.2363
+2026-02-06 09:50:06,278 - INFO - Generating 50 samples for evaluation...
+2026-02-06 09:50:09,619 - INFO - Computing diffusion quality metrics...
+2026-02-06 09:50:09,619 - INFO - MPR (Monotonicity Preservation Rate): 0.0000
+2026-02-06 09:50:09,619 - INFO - TSS (Trend Similarity Score): nan
+2026-02-06 09:50:09,619 - INFO - Real data mean: 0.5038, std: 0.1843
+2026-02-06 09:50:09,620 - INFO - Generated mean: 0.2182, std: 1.8366
+2026-02-06 09:50:09,620 - INFO - Eval metrics: MPR=0.0000, TSS=nan
+2026-02-06 09:50:09,620 - INFO - 
+=== Epoch 31/50 ===
+2026-02-06 09:50:12,229 - INFO - Training loss: 0.2261
+2026-02-06 09:50:12,229 - INFO - 
+=== Epoch 32/50 ===
+2026-02-06 09:50:14,834 - INFO - Training loss: 0.2157
+2026-02-06 09:50:14,865 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:50:14,865 - INFO - 
+=== Epoch 33/50 ===
+2026-02-06 09:50:17,424 - INFO - Training loss: 0.2223
+2026-02-06 09:50:17,424 - INFO - 
+=== Epoch 34/50 ===
+2026-02-06 09:50:20,004 - INFO - Training loss: 0.2165
+2026-02-06 09:50:20,004 - INFO - 
+=== Epoch 35/50 ===
+2026-02-06 09:50:22,632 - INFO - Training loss: 0.2400
+2026-02-06 09:50:22,632 - INFO - 
+=== Epoch 36/50 ===
+2026-02-06 09:50:25,256 - INFO - Training loss: 0.2271
+2026-02-06 09:50:25,256 - INFO - 
+=== Epoch 37/50 ===
+2026-02-06 09:50:27,777 - INFO - Training loss: 0.2208
+2026-02-06 09:50:27,777 - INFO - 
+=== Epoch 38/50 ===
+2026-02-06 09:50:30,374 - INFO - Training loss: 0.2180
+2026-02-06 09:50:30,374 - INFO - 
+=== Epoch 39/50 ===
+2026-02-06 09:50:32,960 - INFO - Training loss: 0.2165
+2026-02-06 09:50:32,960 - INFO - 
+=== Epoch 40/50 ===
+2026-02-06 09:50:35,533 - INFO - Training loss: 0.2166
+2026-02-06 09:50:35,534 - INFO - Generating 50 samples for evaluation...
+2026-02-06 09:50:39,060 - INFO - Computing diffusion quality metrics...
+2026-02-06 09:50:39,060 - INFO - MPR (Monotonicity Preservation Rate): 0.0000
+2026-02-06 09:50:39,060 - INFO - TSS (Trend Similarity Score): nan
+2026-02-06 09:50:39,060 - INFO - Real data mean: 0.5038, std: 0.1843
+2026-02-06 09:50:39,060 - INFO - Generated mean: 0.2483, std: 1.7280
+2026-02-06 09:50:39,061 - INFO - Eval metrics: MPR=0.0000, TSS=nan
+2026-02-06 09:50:39,164 - INFO - Saved checkpoint: experiments/phase1/logs/checkpoint_epoch_40.pt
+2026-02-06 09:50:39,164 - INFO - 
+=== Epoch 41/50 ===
+2026-02-06 09:50:41,848 - INFO - Training loss: 0.2192
+2026-02-06 09:50:41,848 - INFO - 
+=== Epoch 42/50 ===
+2026-02-06 09:50:44,432 - INFO - Training loss: 0.2144
+2026-02-06 09:50:44,462 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:50:44,462 - INFO - 
+=== Epoch 43/50 ===
+2026-02-06 09:50:47,040 - INFO - Training loss: 0.2208
+2026-02-06 09:50:47,041 - INFO - 
+=== Epoch 44/50 ===
+2026-02-06 09:50:49,705 - INFO - Training loss: 0.2016
+2026-02-06 09:50:49,734 - INFO - Saved best model: experiments/phase1/logs/best_model.pt
+2026-02-06 09:50:49,734 - INFO - 
+=== Epoch 45/50 ===
+2026-02-06 09:50:52,389 - INFO - Training loss: 0.2201
+2026-02-06 09:50:52,389 - INFO - 
+=== Epoch 46/50 ===
+2026-02-06 09:50:54,974 - INFO - Training loss: 0.2135
+2026-02-06 09:50:54,974 - INFO - 
+=== Epoch 47/50 ===
+2026-02-06 09:50:57,568 - INFO - Training loss: 0.2117
+2026-02-06 09:50:57,568 - INFO - 
+=== Epoch 48/50 ===
+2026-02-06 09:51:00,469 - INFO - Training loss: 0.2158
+2026-02-06 09:51:00,470 - INFO - 
+=== Epoch 49/50 ===
+2026-02-06 09:51:03,167 - INFO - Training loss: 0.2317
+2026-02-06 09:51:03,168 - INFO - 
+=== Epoch 50/50 ===
+2026-02-06 09:51:05,987 - INFO - Training loss: 0.2141
+2026-02-06 09:51:05,988 - INFO - Generating 50 samples for evaluation...
+2026-02-06 09:51:09,629 - INFO - Computing diffusion quality metrics...
+2026-02-06 09:51:09,629 - INFO - MPR (Monotonicity Preservation Rate): 0.0000
+2026-02-06 09:51:09,629 - INFO - TSS (Trend Similarity Score): nan
+2026-02-06 09:51:09,629 - INFO - Real data mean: 0.5038, std: 0.1843
+2026-02-06 09:51:09,629 - INFO - Generated mean: 0.2333, std: 1.6183
+2026-02-06 09:51:09,630 - INFO - Eval metrics: MPR=0.0000, TSS=nan
+2026-02-06 09:51:09,630 - INFO - Training completed!
+2026-02-06 09:51:09,630 - INFO - 
+=== Final Evaluation ===
+2026-02-06 09:51:09,631 - INFO - Generating 100 samples for evaluation...
+2026-02-06 09:51:17,795 - INFO - Computing diffusion quality metrics...
+2026-02-06 09:51:17,796 - INFO - MPR (Monotonicity Preservation Rate): 0.0000
+2026-02-06 09:51:17,796 - INFO - TSS (Trend Similarity Score): nan
+2026-02-06 09:51:17,796 - INFO - Real data mean: 0.4999, std: 0.1848
+2026-02-06 09:51:17,796 - INFO - Generated mean: 0.2582, std: 1.6170
+2026-02-06 09:51:17,797 - INFO - Results saved to: experiments/phase1/logs/dcd_validation_results.json

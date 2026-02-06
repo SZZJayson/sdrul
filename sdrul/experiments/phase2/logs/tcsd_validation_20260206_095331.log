@@ -1,0 +1,185 @@
+2026-02-06 09:53:31,261 - INFO - ============================================================
+2026-02-06 09:53:31,261 - INFO - Phase 2: TCSD Validation Experiment
+2026-02-06 09:53:31,261 - INFO - ============================================================
+2026-02-06 09:53:31,261 - INFO - Arguments: {'data_dir': 'data/processed', 'sub_datasets': ['FD001', 'FD003'], 'seq_len': 30, 'batch_size': 32, 'num_engines': 50, 'learning_rate': 0.0001, 'num_prototypes': 50, 'lambda_distill': 1.0, 'epochs_per_task': 30, 'experiment_name': 'tcsd_validation', 'log_dir': 'experiments/phase2/logs'}
+2026-02-06 09:53:31,261 - INFO - Device: cpu
+2026-02-06 09:53:31,261 - INFO - 
+============================================================
+2026-02-06 09:53:31,261 - INFO - Running TCSD Experiment
+2026-02-06 09:53:31,261 - INFO - ============================================================
+2026-02-06 09:53:31,269 - INFO - Number of tasks: 2
+2026-02-06 09:53:31,269 - INFO - Sub-datasets: ['FD001', 'FD003']
+2026-02-06 09:53:31,720 - INFO - 
+--- Task 0: FD001 (condition_id=0) ---
+2026-02-06 09:53:31,720 - INFO - Initializing TCSD prototypes...
+2026-02-06 09:53:32,203 - INFO - Prototype initialization: success
+2026-02-06 09:53:39,659 - INFO - Task 0 Epoch 1: loss=1008.2507, sup=1008.2474, distill=0.0007
+2026-02-06 09:53:47,231 - INFO - Task 0 Epoch 2: loss=108.9709, sup=108.9682, distill=0.0002
+2026-02-06 09:53:54,837 - INFO - Task 0 Epoch 3: loss=30.0424, sup=30.0395, distill=0.0002
+2026-02-06 09:54:02,534 - INFO - Task 0 Epoch 4: loss=10.8156, sup=10.8127, distill=0.0002
+2026-02-06 09:54:10,227 - INFO - Task 0 Epoch 5: loss=5.9381, sup=5.9353, distill=0.0001
+2026-02-06 09:54:17,966 - INFO - Task 0 Epoch 6: loss=5.5854, sup=5.5826, distill=0.0001
+2026-02-06 09:54:25,959 - INFO - Task 0 Epoch 7: loss=5.5283, sup=5.5255, distill=0.0001
+2026-02-06 09:54:33,789 - INFO - Task 0 Epoch 8: loss=5.4776, sup=5.4748, distill=0.0001
+2026-02-06 09:54:41,690 - INFO - Task 0 Epoch 9: loss=5.4281, sup=5.4254, distill=0.0000
+2026-02-06 09:54:49,768 - INFO - Task 0 Epoch 10: loss=5.3811, sup=5.3783, distill=0.0000
+2026-02-06 09:54:57,533 - INFO - Task 0 Epoch 11: loss=5.3275, sup=5.3248, distill=0.0000
+2026-02-06 09:55:05,385 - INFO - Task 0 Epoch 12: loss=5.2748, sup=5.2720, distill=0.0000
+2026-02-06 09:55:13,192 - INFO - Task 0 Epoch 13: loss=5.2245, sup=5.2218, distill=0.0000
+2026-02-06 09:55:21,725 - INFO - Task 0 Epoch 14: loss=5.1702, sup=5.1674, distill=0.0000
+2026-02-06 09:55:30,251 - INFO - Task 0 Epoch 15: loss=5.1164, sup=5.1136, distill=0.0000
+2026-02-06 09:55:38,763 - INFO - Task 0 Epoch 16: loss=5.0595, sup=5.0567, distill=0.0000
+2026-02-06 09:55:47,193 - INFO - Task 0 Epoch 17: loss=5.0049, sup=5.0022, distill=0.0000
+2026-02-06 09:55:55,787 - INFO - Task 0 Epoch 18: loss=4.9517, sup=4.9490, distill=0.0000
+2026-02-06 09:56:04,381 - INFO - Task 0 Epoch 19: loss=4.8983, sup=4.8955, distill=0.0000
+2026-02-06 09:56:12,916 - INFO - Task 0 Epoch 20: loss=4.8454, sup=4.8426, distill=0.0000
+2026-02-06 09:56:21,473 - INFO - Task 0 Epoch 21: loss=4.7944, sup=4.7916, distill=0.0000
+2026-02-06 09:56:29,876 - INFO - Task 0 Epoch 22: loss=4.7441, sup=4.7413, distill=0.0000
+2026-02-06 09:56:38,255 - INFO - Task 0 Epoch 23: loss=4.6952, sup=4.6925, distill=0.0000
+2026-02-06 09:56:46,890 - INFO - Task 0 Epoch 24: loss=4.6492, sup=4.6464, distill=0.0000
+2026-02-06 09:56:55,611 - INFO - Task 0 Epoch 25: loss=4.6067, sup=4.6040, distill=0.0000
+2026-02-06 09:57:04,323 - INFO - Task 0 Epoch 26: loss=4.5655, sup=4.5627, distill=0.0000
+2026-02-06 09:57:12,886 - INFO - Task 0 Epoch 27: loss=4.5281, sup=4.5254, distill=0.0000
+2026-02-06 09:57:21,424 - INFO - Task 0 Epoch 28: loss=4.4939, sup=4.4912, distill=0.0000
+2026-02-06 09:57:29,773 - INFO - Task 0 Epoch 29: loss=4.4610, sup=4.4582, distill=0.0000
+2026-02-06 09:57:38,234 - INFO - Task 0 Epoch 30: loss=4.4324, sup=4.4297, distill=0.0000
+2026-02-06 09:57:38,235 - INFO - Evaluating on all tasks...
+2026-02-06 09:57:39,849 - INFO -   Task 0 (FD001): RMSE = 50.1562
+2026-02-06 09:57:39,849 - INFO -   Task 1 (FD003): RMSE = 49.3006
+2026-02-06 09:57:39,849 - INFO - CL Metrics after task 0: ACC=50.1562, BWT=0.0000
+2026-02-06 09:57:39,849 - INFO - 
+--- Task 1: FD003 (condition_id=2) ---
+2026-02-06 09:57:39,849 - INFO - Initializing TCSD prototypes...
+2026-02-06 09:57:40,038 - INFO - Prototype initialization: success
+2026-02-06 09:57:42,244 - INFO - Task 1 Epoch 1: loss=4.3957, sup=4.3930, distill=0.0000
+2026-02-06 09:57:44,311 - INFO - Task 1 Epoch 2: loss=4.3950, sup=4.3922, distill=0.0000
+2026-02-06 09:57:46,435 - INFO - Task 1 Epoch 3: loss=4.3821, sup=4.3793, distill=0.0000
+2026-02-06 09:57:48,494 - INFO - Task 1 Epoch 4: loss=4.3724, sup=4.3697, distill=0.0000
+2026-02-06 09:57:50,553 - INFO - Task 1 Epoch 5: loss=4.3717, sup=4.3689, distill=0.0000
+2026-02-06 09:57:52,639 - INFO - Task 1 Epoch 6: loss=4.3763, sup=4.3736, distill=0.0000
+2026-02-06 09:57:54,777 - INFO - Task 1 Epoch 7: loss=4.3619, sup=4.3592, distill=0.0000
+2026-02-06 09:57:56,801 - INFO - Task 1 Epoch 8: loss=4.3685, sup=4.3657, distill=0.0000
+2026-02-06 09:57:58,818 - INFO - Task 1 Epoch 9: loss=4.3571, sup=4.3543, distill=0.0000
+2026-02-06 09:58:00,947 - INFO - Task 1 Epoch 10: loss=4.3550, sup=4.3522, distill=0.0000
+2026-02-06 09:58:03,012 - INFO - Task 1 Epoch 11: loss=4.3477, sup=4.3449, distill=0.0000
+2026-02-06 09:58:05,043 - INFO - Task 1 Epoch 12: loss=4.3435, sup=4.3407, distill=0.0000
+2026-02-06 09:58:07,134 - INFO - Task 1 Epoch 13: loss=4.3483, sup=4.3456, distill=0.0000
+2026-02-06 09:58:09,249 - INFO - Task 1 Epoch 14: loss=4.3390, sup=4.3363, distill=0.0000
+2026-02-06 09:58:11,342 - INFO - Task 1 Epoch 15: loss=4.3344, sup=4.3316, distill=0.0000
+2026-02-06 09:58:13,402 - INFO - Task 1 Epoch 16: loss=4.3351, sup=4.3324, distill=0.0000
+2026-02-06 09:58:15,515 - INFO - Task 1 Epoch 17: loss=4.3313, sup=4.3285, distill=0.0000
+2026-02-06 09:58:17,547 - INFO - Task 1 Epoch 18: loss=4.3309, sup=4.3282, distill=0.0000
+2026-02-06 09:58:19,598 - INFO - Task 1 Epoch 19: loss=4.3220, sup=4.3192, distill=0.0000
+2026-02-06 09:58:21,661 - INFO - Task 1 Epoch 20: loss=4.3198, sup=4.3170, distill=0.0000
+2026-02-06 09:58:23,774 - INFO - Task 1 Epoch 21: loss=4.3139, sup=4.3111, distill=0.0000
+2026-02-06 09:58:25,793 - INFO - Task 1 Epoch 22: loss=4.3098, sup=4.3071, distill=0.0000
+2026-02-06 09:58:27,930 - INFO - Task 1 Epoch 23: loss=4.3076, sup=4.3049, distill=0.0000
+2026-02-06 09:58:30,040 - INFO - Task 1 Epoch 24: loss=4.3084, sup=4.3057, distill=0.0000
+2026-02-06 09:58:32,140 - INFO - Task 1 Epoch 25: loss=4.3054, sup=4.3027, distill=0.0000
+2026-02-06 09:58:34,336 - INFO - Task 1 Epoch 26: loss=4.3062, sup=4.3034, distill=0.0000
+2026-02-06 09:58:36,415 - INFO - Task 1 Epoch 27: loss=4.3001, sup=4.2974, distill=0.0000
+2026-02-06 09:58:38,485 - INFO - Task 1 Epoch 28: loss=4.2996, sup=4.2969, distill=0.0000
+2026-02-06 09:58:40,658 - INFO - Task 1 Epoch 29: loss=4.3055, sup=4.3028, distill=0.0000
+2026-02-06 09:58:42,725 - INFO - Task 1 Epoch 30: loss=4.2970, sup=4.2942, distill=0.0000
+2026-02-06 09:58:42,726 - INFO - Evaluating on all tasks...
+2026-02-06 09:58:44,303 - INFO -   Task 0 (FD001): RMSE = 44.1149
+2026-02-06 09:58:44,303 - INFO -   Task 1 (FD003): RMSE = 43.6985
+2026-02-06 09:58:44,303 - INFO - CL Metrics after task 1: ACC=43.9067, BWT=-6.0413
+2026-02-06 09:58:44,319 - INFO - 
+============================================================
+2026-02-06 09:58:44,319 - INFO - Running Baseline Experiment
+2026-02-06 09:58:44,319 - INFO - ============================================================
+2026-02-06 09:58:44,338 - INFO - Number of tasks: 2
+2026-02-06 09:58:44,338 - INFO - Sub-datasets: ['FD001', 'FD003']
+2026-02-06 09:58:44,349 - INFO - 
+--- Task 0: FD001 (condition_id=0) ---
+2026-02-06 09:58:48,603 - INFO - Baseline Task 0 Epoch 1: loss=818.6313
+2026-02-06 09:58:52,916 - INFO - Baseline Task 0 Epoch 2: loss=131.4672
+2026-02-06 09:58:57,260 - INFO - Baseline Task 0 Epoch 3: loss=41.7261
+2026-02-06 09:59:01,548 - INFO - Baseline Task 0 Epoch 4: loss=14.8194
+2026-02-06 09:59:05,905 - INFO - Baseline Task 0 Epoch 5: loss=6.8577
+2026-02-06 09:59:10,412 - INFO - Baseline Task 0 Epoch 6: loss=5.5872
+2026-02-06 09:59:14,845 - INFO - Baseline Task 0 Epoch 7: loss=5.5265
+2026-02-06 09:59:19,204 - INFO - Baseline Task 0 Epoch 8: loss=5.4669
+2026-02-06 09:59:23,672 - INFO - Baseline Task 0 Epoch 9: loss=5.4141
+2026-02-06 09:59:28,274 - INFO - Baseline Task 0 Epoch 10: loss=5.3633
+2026-02-06 09:59:32,806 - INFO - Baseline Task 0 Epoch 11: loss=5.3031
+2026-02-06 09:59:37,189 - INFO - Baseline Task 0 Epoch 12: loss=5.2488
+2026-02-06 09:59:41,676 - INFO - Baseline Task 0 Epoch 13: loss=5.1928
+2026-02-06 09:59:46,157 - INFO - Baseline Task 0 Epoch 14: loss=5.1363
+2026-02-06 09:59:50,543 - INFO - Baseline Task 0 Epoch 15: loss=5.0774
+2026-02-06 09:59:54,992 - INFO - Baseline Task 0 Epoch 16: loss=5.0195
+2026-02-06 09:59:59,423 - INFO - Baseline Task 0 Epoch 17: loss=4.9617
+2026-02-06 10:00:03,837 - INFO - Baseline Task 0 Epoch 18: loss=4.9030
+2026-02-06 10:00:08,233 - INFO - Baseline Task 0 Epoch 19: loss=4.8499
+2026-02-06 10:00:12,530 - INFO - Baseline Task 0 Epoch 20: loss=4.7942
+2026-02-06 10:00:16,888 - INFO - Baseline Task 0 Epoch 21: loss=4.7426
+2026-02-06 10:00:21,285 - INFO - Baseline Task 0 Epoch 22: loss=4.6913
+2026-02-06 10:00:25,646 - INFO - Baseline Task 0 Epoch 23: loss=4.6446
+2026-02-06 10:00:30,106 - INFO - Baseline Task 0 Epoch 24: loss=4.5991
+2026-02-06 10:00:34,525 - INFO - Baseline Task 0 Epoch 25: loss=4.5561
+2026-02-06 10:00:38,815 - INFO - Baseline Task 0 Epoch 26: loss=4.5169
+2026-02-06 10:00:43,163 - INFO - Baseline Task 0 Epoch 27: loss=4.4814
+2026-02-06 10:00:47,458 - INFO - Baseline Task 0 Epoch 28: loss=4.4497
+2026-02-06 10:00:51,760 - INFO - Baseline Task 0 Epoch 29: loss=4.4189
+2026-02-06 10:00:56,106 - INFO - Baseline Task 0 Epoch 30: loss=4.3942
+2026-02-06 10:00:56,107 - INFO - Evaluating on all tasks...
+2026-02-06 10:00:57,297 - INFO -   Task 0 (FD001): RMSE = 48.2862
+2026-02-06 10:00:57,297 - INFO -   Task 1 (FD003): RMSE = 47.5705
+2026-02-06 10:00:57,297 - INFO - CL Metrics after task 0: ACC=48.2862, BWT=0.0000
+2026-02-06 10:00:57,297 - INFO - 
+--- Task 1: FD003 (condition_id=2) ---
+2026-02-06 10:00:58,365 - INFO - Baseline Task 1 Epoch 1: loss=4.3608
+2026-02-06 10:00:59,406 - INFO - Baseline Task 1 Epoch 2: loss=4.3630
+2026-02-06 10:01:00,449 - INFO - Baseline Task 1 Epoch 3: loss=4.3498
+2026-02-06 10:01:01,483 - INFO - Baseline Task 1 Epoch 4: loss=4.3521
+2026-02-06 10:01:02,559 - INFO - Baseline Task 1 Epoch 5: loss=4.3462
+2026-02-06 10:01:03,611 - INFO - Baseline Task 1 Epoch 6: loss=4.3384
+2026-02-06 10:01:04,640 - INFO - Baseline Task 1 Epoch 7: loss=4.3399
+2026-02-06 10:01:05,673 - INFO - Baseline Task 1 Epoch 8: loss=4.3415
+2026-02-06 10:01:06,780 - INFO - Baseline Task 1 Epoch 9: loss=4.3270
+2026-02-06 10:01:07,820 - INFO - Baseline Task 1 Epoch 10: loss=4.3275
+2026-02-06 10:01:08,848 - INFO - Baseline Task 1 Epoch 11: loss=4.3335
+2026-02-06 10:01:09,908 - INFO - Baseline Task 1 Epoch 12: loss=4.3191
+2026-02-06 10:01:10,965 - INFO - Baseline Task 1 Epoch 13: loss=4.3129
+2026-02-06 10:01:11,989 - INFO - Baseline Task 1 Epoch 14: loss=4.3124
+2026-02-06 10:01:13,032 - INFO - Baseline Task 1 Epoch 15: loss=4.3100
+2026-02-06 10:01:14,092 - INFO - Baseline Task 1 Epoch 16: loss=4.3148
+2026-02-06 10:01:15,161 - INFO - Baseline Task 1 Epoch 17: loss=4.3117
+2026-02-06 10:01:16,170 - INFO - Baseline Task 1 Epoch 18: loss=4.3051
+2026-02-06 10:01:17,216 - INFO - Baseline Task 1 Epoch 19: loss=4.3038
+2026-02-06 10:01:18,295 - INFO - Baseline Task 1 Epoch 20: loss=4.3046
+2026-02-06 10:01:19,324 - INFO - Baseline Task 1 Epoch 21: loss=4.3000
+2026-02-06 10:01:20,392 - INFO - Baseline Task 1 Epoch 22: loss=4.3012
+2026-02-06 10:01:21,430 - INFO - Baseline Task 1 Epoch 23: loss=4.2985
+2026-02-06 10:01:22,481 - INFO - Baseline Task 1 Epoch 24: loss=4.2922
+2026-02-06 10:01:23,525 - INFO - Baseline Task 1 Epoch 25: loss=4.2923
+2026-02-06 10:01:24,576 - INFO - Baseline Task 1 Epoch 26: loss=4.2905
+2026-02-06 10:01:25,620 - INFO - Baseline Task 1 Epoch 27: loss=4.2862
+2026-02-06 10:01:26,629 - INFO - Baseline Task 1 Epoch 28: loss=4.2876
+2026-02-06 10:01:27,653 - INFO - Baseline Task 1 Epoch 29: loss=4.2844
+2026-02-06 10:01:28,738 - INFO - Baseline Task 1 Epoch 30: loss=4.2880
+2026-02-06 10:01:28,739 - INFO - Evaluating on all tasks...
+2026-02-06 10:01:30,323 - INFO -   Task 0 (FD001): RMSE = 43.2684
+2026-02-06 10:01:30,323 - INFO -   Task 1 (FD003): RMSE = 43.0154
+2026-02-06 10:01:30,323 - INFO - CL Metrics after task 1: ACC=43.1419, BWT=-5.0178
+2026-02-06 10:01:30,330 - INFO - 
+============================================================
+2026-02-06 10:01:30,330 - INFO - FINAL COMPARISON
+2026-02-06 10:01:30,330 - INFO - ============================================================
+2026-02-06 10:01:30,330 - INFO - 
+TCSD Results:
+2026-02-06 10:01:30,330 - INFO -   ACC (avg RMSE): 43.9067
+2026-02-06 10:01:30,330 - INFO -   BWT (forgetting): -6.0413
+2026-02-06 10:01:30,330 - INFO - 
+Baseline Results:
+2026-02-06 10:01:30,330 - INFO -   ACC (avg RMSE): 43.1419
+2026-02-06 10:01:30,330 - INFO -   BWT (forgetting): -5.0178
+2026-02-06 10:01:30,330 - INFO - 
+Improvement (TCSD vs Baseline):
+2026-02-06 10:01:30,330 - INFO -   ACC improvement: -0.7648 (worse)
+2026-02-06 10:01:30,330 - INFO -   BWT improvement: 1.0235 (less forgetting)
+2026-02-06 10:01:30,331 - INFO - 
+Results saved to: experiments/phase2/logs/tcsd_validation_results.json
+2026-02-06 10:01:30,331 - INFO - 
+Experiment completed!

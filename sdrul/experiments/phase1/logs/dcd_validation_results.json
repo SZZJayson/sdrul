@@ -1,0 +1,28 @@
+{
+  "args": {
+    "data_dir": "data/processed",
+    "seq_len": 30,
+    "batch_size": 32,
+    "num_workers": 0,
+    "num_timesteps": 100,
+    "learning_rate": 0.0001,
+    "epochs": 50,
+    "eval_every": 10,
+    "save_every": 20,
+    "experiment_name": "dcd_baseline",
+    "log_dir": "experiments/phase1/logs"
+  },
+  "final_metrics": {
+    "MPR": 0.0,
+    "TSS": 0.0,
+    "real_mean": 0.49993425607681274,
+    "real_std": 0.1848183423280716,
+    "gen_mean": 0.2581593990325928,
+    "gen_std": 1.6170140504837036
+  },
+  "training": {
+    "final_loss": 0.21412990935917559,
+    "best_loss": 0.20162153655085072,
+    "epochs": 50
+  }
+}

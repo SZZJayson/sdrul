@@ -1,0 +1,75 @@
+2026-02-06 08:42:51,894 - INFO - ============================================================
+2026-02-06 08:42:51,895 - INFO - Phase 2: TCSD Validation Experiment
+2026-02-06 08:42:51,895 - INFO - ============================================================
+2026-02-06 08:42:51,895 - INFO - Arguments: {'data_dir': 'data/processed', 'sub_datasets': ['FD001', 'FD003'], 'seq_len': 30, 'batch_size': 16, 'num_engines': 20, 'learning_rate': 0.0001, 'num_prototypes': 50, 'lambda_distill': 1.0, 'epochs_per_task': 2, 'experiment_name': 'tcsd_validation', 'log_dir': 'experiments/phase2/logs'}
+2026-02-06 08:42:51,895 - INFO - Device: cpu
+2026-02-06 08:42:51,895 - INFO - Creating synthetic data for FD001...
+2026-02-06 08:42:51,904 - INFO - Creating synthetic data for FD003...
+2026-02-06 08:42:51,907 - INFO - 
+============================================================
+2026-02-06 08:42:51,907 - INFO - Running TCSD Experiment
+2026-02-06 08:42:51,907 - INFO - ============================================================
+2026-02-06 08:42:51,909 - INFO - Number of tasks: 2
+2026-02-06 08:42:51,909 - INFO - Sub-datasets: ['FD001', 'FD003']
+2026-02-06 08:42:52,459 - INFO - 
+--- Task 0: FD001 (condition_id=0) ---
+2026-02-06 08:42:52,459 - INFO - Initializing TCSD prototypes...
+2026-02-06 08:42:52,714 - INFO - Prototype initialization: success
+2026-02-06 08:42:55,511 - INFO - Task 0 Epoch 1: loss=2189.5988, sup=2189.5962, distill=0.0000
+2026-02-06 08:42:58,080 - INFO - Task 0 Epoch 2: loss=615.8879, sup=615.8851, distill=0.0002
+2026-02-06 08:42:58,080 - INFO - Evaluating on all tasks...
+2026-02-06 08:42:58,597 - INFO -   Task 0 (FD001): RMSE = 95.2655
+2026-02-06 08:42:58,597 - INFO -   Task 1 (FD003): RMSE = 92.8626
+2026-02-06 08:42:58,597 - INFO - CL Metrics after task 0: ACC=95.2655, BWT=0.0000
+2026-02-06 08:42:58,598 - INFO - 
+--- Task 1: FD003 (condition_id=2) ---
+2026-02-06 08:42:58,598 - INFO - Initializing TCSD prototypes...
+2026-02-06 08:42:58,732 - INFO - Prototype initialization: success
+2026-02-06 08:43:01,243 - INFO - Task 1 Epoch 1: loss=249.5475, sup=249.5449, distill=0.0000
+2026-02-06 08:43:03,652 - INFO - Task 1 Epoch 2: loss=124.8212, sup=124.8186, distill=0.0000
+2026-02-06 08:43:03,653 - INFO - Evaluating on all tasks...
+2026-02-06 08:43:04,209 - INFO -   Task 0 (FD001): RMSE = 94.7062
+2026-02-06 08:43:04,209 - INFO -   Task 1 (FD003): RMSE = 92.3188
+2026-02-06 08:43:04,209 - INFO - CL Metrics after task 1: ACC=93.5125, BWT=-0.5592
+2026-02-06 08:43:04,213 - INFO - 
+============================================================
+2026-02-06 08:43:04,213 - INFO - Running Baseline Experiment
+2026-02-06 08:43:04,213 - INFO - ============================================================
+2026-02-06 08:43:04,219 - INFO - Number of tasks: 2
+2026-02-06 08:43:04,219 - INFO - Sub-datasets: ['FD001', 'FD003']
+2026-02-06 08:43:04,226 - INFO - 
+--- Task 0: FD001 (condition_id=0) ---
+2026-02-06 08:43:05,368 - INFO - Baseline Task 0 Epoch 1: loss=1057.5148
+2026-02-06 08:43:06,532 - INFO - Baseline Task 0 Epoch 2: loss=239.0116
+2026-02-06 08:43:06,533 - INFO - Evaluating on all tasks...
+2026-02-06 08:43:07,139 - INFO -   Task 0 (FD001): RMSE = 94.9708
+2026-02-06 08:43:07,140 - INFO -   Task 1 (FD003): RMSE = 92.5746
+2026-02-06 08:43:07,140 - INFO - CL Metrics after task 0: ACC=94.9708, BWT=0.0000
+2026-02-06 08:43:07,140 - INFO - 
+--- Task 1: FD003 (condition_id=2) ---
+2026-02-06 08:43:08,220 - INFO - Baseline Task 1 Epoch 1: loss=90.7449
+2026-02-06 08:43:09,334 - INFO - Baseline Task 1 Epoch 2: loss=39.4119
+2026-02-06 08:43:09,334 - INFO - Evaluating on all tasks...
+2026-02-06 08:43:09,944 - INFO -   Task 0 (FD001): RMSE = 94.5220
+2026-02-06 08:43:09,944 - INFO -   Task 1 (FD003): RMSE = 92.1279
+2026-02-06 08:43:09,944 - INFO - CL Metrics after task 1: ACC=93.3250, BWT=-0.4488
+2026-02-06 08:43:09,946 - INFO - 
+============================================================
+2026-02-06 08:43:09,947 - INFO - FINAL COMPARISON
+2026-02-06 08:43:09,947 - INFO - ============================================================
+2026-02-06 08:43:09,947 - INFO - 
+TCSD Results:
+2026-02-06 08:43:09,947 - INFO -   ACC (avg RMSE): 93.5125
+2026-02-06 08:43:09,947 - INFO -   BWT (forgetting): -0.5592
+2026-02-06 08:43:09,947 - INFO - 
+Baseline Results:
+2026-02-06 08:43:09,947 - INFO -   ACC (avg RMSE): 93.3250
+2026-02-06 08:43:09,947 - INFO -   BWT (forgetting): -0.4488
+2026-02-06 08:43:09,947 - INFO - 
+Improvement (TCSD vs Baseline):
+2026-02-06 08:43:09,947 - INFO -   ACC improvement: -0.1875 (worse)
+2026-02-06 08:43:09,947 - INFO -   BWT improvement: 0.1104 (less forgetting)
+2026-02-06 08:43:09,947 - INFO - 
+Results saved to: experiments/phase2/logs/tcsd_validation_results.json
+2026-02-06 08:43:09,947 - INFO - 
+Experiment completed!

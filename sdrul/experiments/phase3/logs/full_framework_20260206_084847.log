@@ -1,0 +1,75 @@
+2026-02-06 08:48:47,301 - INFO - ============================================================
+2026-02-06 08:48:47,301 - INFO - Phase 3: Full Framework (SDFT-DIMIX) Experiment
+2026-02-06 08:48:47,301 - INFO - ============================================================
+2026-02-06 08:48:47,301 - INFO - Arguments: {'data_dir': 'data/processed', 'sub_datasets': ['FD001', 'FD003'], 'seq_len': 30, 'batch_size': 16, 'num_engines': 20, 'learning_rate': 0.0001, 'lambda_distill': 1.0, 'lambda_replay': 0.5, 'lambda_ewc': 1000.0, 'num_prototypes': 50, 'dcd_epochs': 2, 'epochs_per_task': 2, 'run_ablations': False, 'experiment_name': 'full_framework', 'log_dir': 'experiments/phase3/logs'}
+2026-02-06 08:48:47,301 - INFO - Device: cpu
+2026-02-06 08:48:47,301 - INFO - 
+============================================================
+2026-02-06 08:48:47,301 - INFO - Running FULL Experiment
+2026-02-06 08:48:47,301 - INFO - ============================================================
+2026-02-06 08:48:47,305 - INFO - Number of tasks: 2
+2026-02-06 08:48:47,795 - INFO - 
+--- Task 0: FD001 (cond=0) ---
+2026-02-06 08:48:47,795 - INFO - Pre-training DCD on task 0...
+2026-02-06 08:48:49,919 - INFO - Initializing TCSD prototypes for task 0...
+2026-02-06 08:48:52,872 - INFO - Task 0 Epoch 1: loss=972.1577, sup=972.1551, dist=0.0000, replay=0.0000
+2026-02-06 08:48:55,647 - INFO - Task 0 Epoch 2: loss=219.5062, sup=219.5034, dist=0.0003, replay=0.0000
+2026-02-06 08:48:55,647 - INFO - Computing Fisher information for task 0...
+2026-02-06 08:48:56,493 - INFO - Evaluating on all tasks...
+2026-02-06 08:48:57,037 - INFO -   Task 0: RMSE = 95.3473
+2026-02-06 08:48:57,038 - INFO -   Task 1: RMSE = 92.9449
+2026-02-06 08:48:57,038 - INFO - CL Metrics: ACC=95.3473, BWT=0.0000
+2026-02-06 08:48:57,038 - INFO - 
+--- Task 1: FD003 (cond=2) ---
+2026-02-06 08:48:57,038 - INFO - Pre-training DCD on task 1...
+2026-02-06 08:48:59,005 - INFO - Initializing TCSD prototypes for task 1...
+2026-02-06 08:51:50,035 - INFO - Task 1 Epoch 1: loss=252.7967, sup=92.6994, dist=0.0000, replay=0.0000
+2026-02-06 08:55:16,832 - INFO - Task 1 Epoch 2: loss=169.7991, sup=96.8537, dist=0.0000, replay=0.0002
+2026-02-06 08:55:16,833 - INFO - Computing Fisher information for task 1...
+2026-02-06 08:55:17,754 - INFO - Evaluating on all tasks...
+2026-02-06 08:55:18,840 - INFO -   Task 0: RMSE = 95.2281
+2026-02-06 08:55:18,840 - INFO -   Task 1: RMSE = 92.8296
+2026-02-06 08:55:18,840 - INFO - CL Metrics: ACC=94.0288, BWT=-0.1192
+2026-02-06 08:55:18,860 - INFO - 
+============================================================
+2026-02-06 08:55:18,860 - INFO - Running BASELINE Experiment
+2026-02-06 08:55:18,860 - INFO - ============================================================
+2026-02-06 08:55:18,867 - INFO - Number of tasks: 2
+2026-02-06 08:55:18,902 - INFO - 
+--- Task 0: FD001 (cond=0) ---
+2026-02-06 08:55:18,902 - INFO - Initializing TCSD prototypes for task 0...
+2026-02-06 08:55:22,035 - INFO - Task 0 Epoch 1: loss=1006.2100, sup=1006.2074, dist=0.0000, replay=0.0000
+2026-02-06 08:55:25,129 - INFO - Task 0 Epoch 2: loss=223.3646, sup=223.3620, dist=0.0004, replay=0.0000
+2026-02-06 08:55:25,133 - INFO - Evaluating on all tasks...
+2026-02-06 08:55:25,755 - INFO -   Task 0: RMSE = 95.2994
+2026-02-06 08:55:25,755 - INFO -   Task 1: RMSE = 92.8974
+2026-02-06 08:55:25,755 - INFO - CL Metrics: ACC=95.2994, BWT=0.0000
+2026-02-06 08:55:25,755 - INFO - 
+--- Task 1: FD003 (cond=2) ---
+2026-02-06 08:55:25,755 - INFO - Initializing TCSD prototypes for task 1...
+2026-02-06 08:55:28,725 - INFO - Task 1 Epoch 1: loss=84.0557, sup=84.0532, dist=0.0000, replay=0.0000
+2026-02-06 08:55:31,666 - INFO - Task 1 Epoch 2: loss=37.7770, sup=37.7744, dist=0.0003, replay=0.0000
+2026-02-06 08:55:31,669 - INFO - Evaluating on all tasks...
+2026-02-06 08:55:32,302 - INFO -   Task 0: RMSE = 94.8662
+2026-02-06 08:55:32,302 - INFO -   Task 1: RMSE = 92.4671
+2026-02-06 08:55:32,302 - INFO - CL Metrics: ACC=93.6666, BWT=-0.4332
+2026-02-06 08:55:32,321 - INFO - 
+============================================================
+2026-02-06 08:55:32,322 - INFO - FINAL COMPARISON
+2026-02-06 08:55:32,322 - INFO - ============================================================
+2026-02-06 08:55:32,322 - INFO - 
+FULL:
+2026-02-06 08:55:32,322 - INFO -   ACC (avg RMSE): 94.0288
+2026-02-06 08:55:32,322 - INFO -   BWT (forgetting): -0.1192
+2026-02-06 08:55:32,322 - INFO - 
+BASELINE:
+2026-02-06 08:55:32,322 - INFO -   ACC (avg RMSE): 93.6666
+2026-02-06 08:55:32,322 - INFO -   BWT (forgetting): -0.4332
+2026-02-06 08:55:32,322 - INFO - 
+Full Framework vs Baseline:
+2026-02-06 08:55:32,322 - INFO -   ACC improvement: -0.3622 (worse)
+2026-02-06 08:55:32,322 - INFO -   BWT improvement: -0.3140 (more forgetting)
+2026-02-06 08:55:32,322 - INFO - 
+Results saved to: experiments/phase3/logs/full_framework_results.json
+2026-02-06 08:55:32,322 - INFO - 
+Experiment completed!
