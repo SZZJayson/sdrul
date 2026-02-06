@@ -16,9 +16,12 @@ import numpy as np
 from typing import Dict, List, Optional, Tuple, Union, TYPE_CHECKING
 from collections import defaultdict
 import random
+import logging
 
 if TYPE_CHECKING:
     from models.tcsd.prototype_manager import TrajectoryPrototypeManager
+
+logger = logging.getLogger(__name__)
 
 
 class ReplayBuffer:
@@ -577,6 +580,10 @@ class SmartReplayBuffer(ReplayBuffer):
             'std': float(np.std(rul_values)),
             'count': len(rul_values),
         }
+        logger.debug(
+            f"Task {task_id} stats updated: mean={self.task_stats[task_id]['mean']:.2f}, "
+            f"std={self.task_stats[task_id]['std']:.2f}, count={len(rul_values)}"
+        )
 
     def compute_replay_ratio(
         self,
@@ -627,6 +634,11 @@ class SmartReplayBuffer(ReplayBuffer):
         # Higher divergence -> higher replay ratio
         ratio = self.base_replay_ratio + 0.3 * avg_divergence
         ratio = np.clip(ratio, self.min_replay_ratio, self.max_replay_ratio)
+
+        logger.debug(
+            f"Dynamic replay ratio: {ratio:.3f} (divergence={avg_divergence:.3f}, "
+            f"current_task={current_task}, prev_tasks={previous_tasks})"
+        )
 
         return float(ratio)
 
