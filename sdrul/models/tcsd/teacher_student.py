@@ -196,12 +196,12 @@ class StudentBranch(nn.Module):
     Makes predictions without prototype conditioning.
     Learns to match teacher's conditioned predictions through distillation.
 
-    Note: Unlike previous implementation, student does NOT have additional
-    processing layers to ensure identical feature extraction path with teacher.
+    Optionally integrates with DSA-MoE for multi-condition knowledge organization.
 
     Args:
         feature_extractor: Shared feature extractor (same instance as teacher)
         rul_head: Shared RUL prediction head (same instance as teacher)
+        moe: Optional shared MoE module (same instance as RULPredictionModel)
         d_model: Feature dimension (default: 256)
     """
 
@@ -209,19 +209,19 @@ class StudentBranch(nn.Module):
         self,
         feature_extractor: nn.Module,
         rul_head: nn.Module,
+        moe: Optional[nn.Module] = None,
         d_model: int = 256,
     ):
         super().__init__()
         self.feature_extractor = feature_extractor  # Shared with teacher
         self.rul_head = rul_head  # Shared with teacher
+        self.moe = moe  # Shared with RULPredictionModel
         self.d_model = d_model
-
-        # Note: No additional student_layers to ensure identical feature path
-        # The only difference is teacher has FiLM conditioning, student doesn't
 
     def forward(
         self,
         x: torch.Tensor,
+        condition_id: Optional[torch.Tensor] = None,
         mask: Optional[torch.Tensor] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
@@ -229,6 +229,7 @@ class StudentBranch(nn.Module):
 
         Args:
             x: Input sensor data [batch, seq_len, sensor_dim]
+            condition_id: Optional operating condition IDs [batch] (for MoE routing)
             mask: Optional attention mask [batch, seq_len]
 
         Returns:
@@ -238,8 +239,13 @@ class StudentBranch(nn.Module):
         # Extract features (shared with teacher)
         features = self.feature_extractor(x, mask)  # [batch, seq_len, d_model]
 
-        # Predict RUL distribution (shared head with teacher)
-        mu, sigma = self.rul_head(features)
+        if self.moe is not None:
+            # Apply MoE transformation
+            moe_output, _ = self.moe(features, x, condition_id, mask)
+            mu, sigma = self.rul_head(moe_output)
+        else:
+            # Direct prediction without MoE
+            mu, sigma = self.rul_head(features)
 
         return mu, sigma
 
@@ -271,6 +277,7 @@ class TeacherStudentPair(nn.Module):
 
     Args:
         feature_extractor: Shared feature extractor (can be external for sharing with DSA-MoE)
+        moe: Optional shared MoE module (for student branch integration)
         sensor_dim: Input sensor dimension (default: 14, only used if feature_extractor is None)
         d_model: Feature dimension (default: 256)
         prototype_dim: Prototype embedding dimension (default: 128)
@@ -279,6 +286,7 @@ class TeacherStudentPair(nn.Module):
     def __init__(
         self,
         feature_extractor: Optional[nn.Module] = None,
+        moe: Optional[nn.Module] = None,
         sensor_dim: int = 14,
         d_model: int = 256,
         prototype_dim: int = 128,
@@ -317,6 +325,7 @@ class TeacherStudentPair(nn.Module):
         self.student = StudentBranch(
             feature_extractor=self.feature_extractor,
             rul_head=self.student_rul_head,
+            moe=moe,  # Pass shared MoE to student
             d_model=d_model,
         )
 
@@ -335,15 +344,17 @@ class TeacherStudentPair(nn.Module):
     def forward_student(
         self,
         x: torch.Tensor,
+        condition_id: Optional[torch.Tensor] = None,
         mask: Optional[torch.Tensor] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Forward through student without conditioning."""
-        return self.student(x, mask)
+        return self.student(x, condition_id, mask)
 
     def forward(
         self,
         x: torch.Tensor,
         prototype: Optional[torch.Tensor] = None,
+        condition_id: Optional[torch.Tensor] = None,
         mask: Optional[torch.Tensor] = None,
     ) -> Tuple[Tuple[torch.Tensor, torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
         """
@@ -352,13 +363,14 @@ class TeacherStudentPair(nn.Module):
         Args:
             x: Input sensor data [batch, seq_len, sensor_dim]
             prototype: Prototype embedding [batch, prototype_dim] (required for teacher)
+            condition_id: Optional operating condition IDs [batch] (for student MoE routing)
             mask: Optional attention mask
 
         Returns:
             teacher_output: (mu_t, sigma_t)
             student_output: (mu_s, sigma_s)
         """
-        student_output = self.student(x, mask)
+        student_output = self.student(x, condition_id, mask)
 
         if prototype is not None:
             teacher_output = self.teacher(x, prototype, mask)

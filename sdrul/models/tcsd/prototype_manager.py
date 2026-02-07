@@ -11,6 +11,7 @@ import torch.nn.functional as F
 from typing import Dict, List, Optional, Tuple
 import numpy as np
 from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
 
 import sys
 import os
@@ -452,3 +453,126 @@ class TrajectoryPrototypeManager(PrototypeBuffer):
                     traj = traj.to(device)
                     enc = enc.to(device)
                 self.buffer[cond_id].append((traj, enc))
+
+    def _encode_trajectories(
+        self,
+        trajectories: List[torch.Tensor],
+        device: Optional[torch.device] = None,
+    ) -> np.ndarray:
+        """
+        Encode a list of trajectories to numpy array.
+
+        Args:
+            trajectories: List of RUL trajectories
+            device: Device for computation
+
+        Returns:
+            encodings: Numpy array of shape [num_trajectories, encoding_dim]
+        """
+        if device is None:
+            device = trajectories[0].device if isinstance(trajectories[0], torch.Tensor) else torch.device('cpu')
+
+        with torch.no_grad():
+            encodings = []
+            for traj in trajectories:
+                if not isinstance(traj, torch.Tensor):
+                    traj = torch.tensor(traj, dtype=torch.float32, device=device)
+                if traj.dim() == 1:
+                    traj = traj.unsqueeze(0)
+                enc = self.encoder(traj).squeeze(0)
+                encodings.append(enc.cpu().numpy())
+
+        return np.stack(encodings)
+
+    def auto_select_k(
+        self,
+        trajectories: List[torch.Tensor],
+        min_k: int = 2,
+        max_k: int = 10,
+    ) -> int:
+        """
+        Automatically select optimal number of prototypes using Silhouette score.
+
+        The Silhouette score measures how similar samples are to their own cluster
+        compared to other clusters. Higher scores indicate better-defined clusters.
+
+        Args:
+            trajectories: List of RUL trajectories
+            min_k: Minimum number of prototypes to consider
+            max_k: Maximum number of prototypes to consider
+
+        Returns:
+            optimal_k: Optimal number of prototypes
+        """
+        if len(trajectories) < min_k + 1:
+            return min(len(trajectories), min_k)
+
+        # Encode all trajectories
+        encodings = self._encode_trajectories(trajectories)
+
+        # Limit max_k to valid range
+        max_k = min(max_k, len(trajectories) - 1)
+
+        if max_k < min_k:
+            return min_k
+
+        best_k = min_k
+        best_score = -1.0
+
+        for k in range(min_k, max_k + 1):
+            kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
+            labels = kmeans.fit_predict(encodings)
+
+            # Silhouette score requires at least 2 clusters and samples > clusters
+            if len(set(labels)) < 2:
+                continue
+
+            score = silhouette_score(encodings, labels)
+
+            if score > best_score:
+                best_score = score
+                best_k = k
+
+        return best_k
+
+    def fit_kmeans_auto_k(
+        self,
+        trajectories: List[torch.Tensor],
+        condition_id: int,
+        device: Optional[torch.device] = None,
+        min_k: int = 2,
+        max_k: int = 10,
+    ) -> bool:
+        """
+        Initialize prototypes using K-means with automatically selected K.
+
+        Combines auto_select_k and fit_kmeans for convenience.
+
+        Args:
+            trajectories: List of RUL trajectories
+            condition_id: Operating condition ID
+            device: Device for tensors
+            min_k: Minimum K value to consider
+            max_k: Maximum K value to consider
+
+        Returns:
+            success: Whether initialization was successful
+        """
+        if len(trajectories) < min_k:
+            return False
+
+        # Auto-select optimal K
+        optimal_k = self.auto_select_k(trajectories, min_k, max_k)
+
+        # Temporarily set num_prototypes to optimal_k
+        original_k = self.num_prototypes
+        self.num_prototypes = optimal_k
+
+        # Fit K-means with optimal K
+        success = self.fit_kmeans(trajectories, condition_id, device)
+
+        # Keep the new K value if successful, otherwise restore
+        if not success:
+            self.num_prototypes = original_k
+
+        return success

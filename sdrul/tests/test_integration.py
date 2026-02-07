@@ -758,5 +758,261 @@ class TestDatasetModelCompatibility:
             assert mu.shape == (1,)
 
 
+class TestExpertExpansionIntegration:
+    """Test expert expansion integration with optimizer."""
+
+    @pytest.fixture
+    def expansion_setup(self):
+        """Set up model and trainer for expansion testing."""
+        # Create model with MoE
+        moe_config = DSAMoEConfig(
+            num_conditions=3,
+            num_stages=2,
+            d_model=256,
+            sensor_dim=14,
+        )
+
+        class ModelWithMoE(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.feature_extractor = TransformerFeatureExtractor(
+                    sensor_dim=14, d_model=256
+                )
+                self.moe = DSAMoE(moe_config)
+                self.rul_head = GaussianRULHead(d_model=256)
+
+            def forward(self, x, condition_id=None, mask=None):
+                features = self.feature_extractor(x, mask)
+                moe_out, aux = self.moe(features, x, condition_id, mask)
+                mu, sigma = self.rul_head(moe_out)
+                return (mu, sigma), aux
+
+        model = ModelWithMoE()
+
+        config = ContinualTrainerConfig(
+            use_ewc=False,
+            use_experience_replay=False,
+            auto_expand_experts=False,  # Start with manual expansion
+        )
+
+        trainer = ContinualTrainer(
+            model=model,
+            config=config,
+            device=torch.device('cpu'),
+        )
+
+        return trainer, model
+
+    def test_expert_expansion_adds_to_optimizer(self, expansion_setup):
+        """Test that new experts are added to optimizer after expansion."""
+        trainer, model = expansion_setup
+
+        # Count initial optimizer params
+        initial_param_groups = len(trainer.optimizer.param_groups)
+        initial_param_count = sum(len(g['params']) for g in trainer.optimizer.param_groups)
+
+        # Expand experts
+        model.moe.expand_for_new_condition(source_condition_id=0)
+
+        # Add new params to optimizer
+        trainer._add_new_params_to_optimizer()
+
+        # Check params increased
+        new_param_count = sum(len(g['params']) for g in trainer.optimizer.param_groups)
+        assert new_param_count > initial_param_count
+
+        # Check new params are trainable
+        for group in trainer.optimizer.param_groups:
+            for param in group['params']:
+                if param.requires_grad:
+                    assert param.grad is None or not torch.isnan(param.grad).any()
+
+    def test_expert_expansion_with_training_step(self, expansion_setup):
+        """Test training step works after expert expansion."""
+        trainer, model = expansion_setup
+
+        # Create batch
+        batch = (
+            torch.randn(4, 30, 14),
+            torch.tensor([50.0, 60.0, 70.0, 80.0]),
+            torch.tensor([0, 1, 2, 0]),
+        )
+
+        # Train before expansion
+        loss1, _ = trainer.training_step(batch, task_id=0)
+        assert loss1.item() >= 0
+
+        # Expand experts
+        model.moe.expand_for_new_condition(source_condition_id=0)
+        trainer._add_new_params_to_optimizer()
+
+        # Train after expansion - should not crash
+        loss2, _ = trainer.training_step(batch, task_id=0)
+        assert loss2.item() >= 0
+
+    def test_auto_expansion_in_training_step(self):
+        """Test automatic expert expansion during training step."""
+        # Create model with MoE
+        moe_config = DSAMoEConfig(
+            num_conditions=3,
+            num_stages=2,
+            d_model=256,
+            sensor_dim=14,
+        )
+
+        class ModelWithMoE(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.feature_extractor = TransformerFeatureExtractor(
+                    sensor_dim=14, d_model=256
+                )
+                self.moe = DSAMoE(moe_config)
+                self.rul_head = GaussianRULHead(d_model=256)
+
+            def forward(self, x, condition_id=None, mask=None):
+                features = self.feature_extractor(x, mask)
+                moe_out, aux = self.moe(features, x, condition_id, mask)
+                mu, sigma = self.rul_head(moe_out)
+                return (mu, sigma), aux
+
+        model = ModelWithMoE()
+
+        config = ContinualTrainerConfig(
+            use_ewc=False,
+            use_experience_replay=False,
+            auto_expand_experts=True,  # Enable auto expansion
+            new_condition_threshold=0.9,  # High threshold to trigger detection
+        )
+
+        trainer = ContinualTrainer(
+            model=model,
+            config=config,
+            device=torch.device('cpu'),
+        )
+
+        # Create batch with condition_id=5 (beyond initial 3)
+        batch = (
+            torch.randn(4, 30, 14),
+            torch.tensor([50.0, 60.0, 70.0, 80.0]),
+            torch.tensor([5, 5, 5, 5]),  # Condition 5 doesn't exist
+        )
+
+        initial_num_conditions = model.moe.num_conditions
+
+        # Training step should trigger expansion
+        # Note: With random data, detection may or may not trigger
+        # This test verifies the mechanism exists
+        loss, _ = trainer.training_step(batch, task_id=0)
+        assert loss.item() >= 0
+
+    def test_optimizer_no_duplicate_params(self, expansion_setup):
+        """Test that optimizer doesn't have duplicate parameters after expansion."""
+        from models.rul_model import create_shared_model_and_tcsd
+        from models.rul_model import RULModelConfig
+
+        # Create model with shared MoE between model and TCSD
+        config = RULModelConfig(
+            num_conditions=3,
+            num_stages=2,
+            d_model=256,
+        )
+        model, tcsd = create_shared_model_and_tcsd(config)
+
+        trainer_config = ContinualTrainerConfig(
+            use_ewc=False,
+            use_experience_replay=False,
+        )
+
+        trainer = ContinualTrainer(
+            model=model,
+            tcsd=tcsd,
+            config=trainer_config,
+            device=torch.device('cpu'),
+        )
+
+        # Count unique parameters before expansion
+        param_ids_before = {id(p) for group in trainer.optimizer.param_groups for p in group['params']}
+        params_count_before = sum(len(g['params']) for g in trainer.optimizer.param_groups)
+
+        # Expand experts
+        model.moe.expand_for_new_condition(source_condition_id=0)
+        trainer._add_new_params_to_optimizer()
+
+        # Count after expansion
+        param_ids_after = {id(p) for group in trainer.optimizer.param_groups for p in group['params']}
+        params_count_after = sum(len(g['params']) for g in trainer.optimizer.param_groups)
+
+        # Debug: find duplicates
+        seen_ids = set()
+        duplicates = []
+        for group in trainer.optimizer.param_groups:
+            for param in group['params']:
+                if id(param) in seen_ids:
+                    duplicates.append((id(param), param.shape))
+                seen_ids.add(id(param))
+
+        # Verify no duplicates
+        assert len(param_ids_before) < len(param_ids_after), "New params should be added"
+        assert len(duplicates) == 0, f"Duplicate params detected: {duplicates[:5]}"  # Show first 5 duplicates
+
+    def test_non_consecutive_condition_expansion(self):
+        """Test expansion with non-consecutive condition IDs."""
+        from models.rul_model import create_shared_model_and_tcsd
+        from models.rul_model import RULModelConfig
+
+        # Create model with 3 initial conditions
+        config = RULModelConfig(
+            num_conditions=3,
+            num_stages=2,
+            d_model=256,
+        )
+        model, tcsd = create_shared_model_and_tcsd(config)
+
+        trainer_config = ContinualTrainerConfig(
+            use_ewc=False,
+            use_experience_replay=False,
+            auto_expand_experts=True,
+            new_condition_threshold=0.99,  # High threshold to trigger detection
+        )
+
+        trainer = ContinualTrainer(
+            model=model,
+            tcsd=tcsd,
+            config=trainer_config,
+            device=torch.device('cpu'),
+        )
+
+        # Initial state
+        assert model.moe.num_conditions == 3
+        assert tcsd.prototype_manager.num_conditions == 3
+
+        # Create batch with condition_id=5 (non-consecutive, skip 4)
+        batch = (
+            torch.randn(4, 30, 14),
+            torch.tensor([50.0, 60.0, 70.0, 80.0]),
+            torch.tensor([5, 5, 5, 5]),  # Skip from 3 to 5
+        )
+
+        # Training should trigger expansion
+        trainer.training_step(batch, task_id=0)
+
+        # Both should be at 6 now
+        assert model.moe.num_conditions == 6, f"MoE should have 6 conditions, got {model.moe.num_conditions}"
+        assert tcsd.prototype_manager.num_conditions == 6, f"PM should have 6 conditions, got {tcsd.prototype_manager.num_conditions}"
+
+        # Verify routing works for condition 5
+        x, y, condition_id = batch
+        (mu, sigma), aux = model(x, condition_id=condition_id)
+
+        # Check that routing weights include the new condition
+        assert aux['cond_weights'].shape[-1] == 6, f"Routing weights should have 6 conditions"
+
+        # Condition 5 should get non-zero weights (not clamped to last valid)
+        # All samples are condition 5, so weights should be concentrated at index 5
+        cond_weights_sum = aux['cond_weights'].sum(dim=0)
+        assert cond_weights_sum[5] > 0, "Condition 5 should have non-zero weights"
+        assert cond_weights_sum[5] == 4.0, f"All 4 samples should route to condition 5, got {cond_weights_sum}"
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])

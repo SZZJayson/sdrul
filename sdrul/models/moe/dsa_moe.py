@@ -254,6 +254,108 @@ class DSAMoE(nn.Module):
                     unused.append((cond_idx, stage_idx))
         return unused
 
+    def expand_for_new_condition(
+        self,
+        source_condition_id: int,
+        device: Optional[torch.device] = None,
+    ) -> int:
+        """
+        Expand expert matrix for a new operating condition.
+
+        Clones experts from the most similar existing condition as initialization.
+
+        Args:
+            source_condition_id: ID of condition to clone experts from
+            device: Device for new experts (defaults to existing experts' device)
+
+        Returns:
+            new_condition_id: ID assigned to the new condition
+        """
+        new_condition_id = self.num_conditions
+
+        # Determine device and dtype from existing experts
+        if device is None:
+            device = next(self.experts.parameters()).device
+        dtype = next(self.experts.parameters()).dtype
+
+        # Create new experts for all stages of the new condition
+        new_experts = nn.ModuleList([
+            AdapterExpert(
+                d_model=self.config.d_model,
+                bottleneck_dim=self.config.bottleneck_dim,
+                dropout=self.config.dropout,
+            )
+            for _ in range(self.num_stages)
+        ])
+
+        # Move new experts to correct device and dtype before cloning
+        for expert in new_experts:
+            expert.to(device=device, dtype=dtype)
+
+        # Clone weights from source condition
+        self._clone_expert_row(source_condition_id, new_experts)
+
+        # Add new experts to the module list
+        for expert in new_experts:
+            self.experts.append(expert)
+
+        # Expand condition router
+        self.condition_router.expand_classifier(
+            new_num_conditions=self.num_conditions + 1,
+            source_condition_id=source_condition_id,
+        )
+
+        # Update counts
+        self.num_conditions += 1
+        self.num_experts = self.num_conditions * self.num_stages
+
+        return new_condition_id
+
+    def _clone_expert_row(
+        self,
+        source_cond_idx: int,
+        target_experts: nn.ModuleList,
+    ):
+        """
+        Clone weights from source condition's experts to target experts.
+
+        Args:
+            source_cond_idx: Source condition index to clone from
+            target_experts: ModuleList of new experts to initialize
+        """
+        with torch.no_grad():
+            for stage_idx in range(self.num_stages):
+                source_expert = self.get_expert(source_cond_idx, stage_idx)
+                target_expert = target_experts[stage_idx]
+
+                # Copy all parameters
+                for (name, src_param), (_, tgt_param) in zip(
+                    source_expert.named_parameters(),
+                    target_expert.named_parameters()
+                ):
+                    tgt_param.copy_(src_param)
+
+    def detect_new_condition(
+        self,
+        features: torch.Tensor,
+        threshold: float = 0.5,
+    ) -> Tuple[bool, int, float]:
+        """
+        Detect whether input represents a new operating condition.
+
+        Delegates to condition router's detection method.
+
+        Args:
+            features: Input features [batch, seq_len, d_model]
+            threshold: Confidence threshold
+
+        Returns:
+            is_new: Whether this appears to be a new condition
+            predicted_condition: ID of most similar existing condition
+            confidence: Confidence score
+        """
+        return self.condition_router.detect_new_condition(features, threshold)
+
 
 class DSAMoEWithFeatureExtractor(nn.Module):
     """
