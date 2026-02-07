@@ -355,5 +355,360 @@ class TestDSAMoE:
         assert torch.allclose(aux['expert_loads'].sum(), torch.tensor(1.0), atol=1e-5)
 
 
+    def test_expert_loads_sum(self, moe):
+        """Test that expert loads sum to 1."""
+        features = torch.randn(4, 30, 256)
+        x_raw = torch.randn(4, 30, 14)
+
+        _, aux = moe(features, x_raw)
+
+        # Expert loads should approximately sum to 1
+        assert torch.allclose(aux['expert_loads'].sum(), torch.tensor(1.0), atol=1e-5)
+
+
+class TestConditionRouterNewConditionDetection:
+    """Tests for ConditionRouter new condition detection."""
+
+    @pytest.fixture
+    def router(self):
+        return ConditionRouter(d_model=256, num_conditions=6)
+
+    def test_detect_new_condition_low_confidence(self, router):
+        """Test detection with low confidence (should be detected as new)."""
+        # Use random features that likely won't match any condition well
+        features = torch.randn(1, 256)
+
+        is_new, predicted_cond, confidence = router.detect_new_condition(
+            features, threshold=0.9
+        )
+
+        # With high threshold (0.9), random features likely detected as new
+        assert isinstance(is_new, bool)
+        assert isinstance(predicted_cond, int)
+        assert 0 <= predicted_cond < 6
+        assert 0 <= confidence <= 1
+
+    def test_detect_new_condition_high_confidence(self, router):
+        """Test detection with high confidence (should NOT be new)."""
+        # After training, realistic features might have high confidence
+        # For now, just test the API
+        features = torch.randn(1, 256)
+
+        is_new, predicted_cond, confidence = router.detect_new_condition(
+            features, threshold=0.1
+        )
+
+        # With low threshold (0.1), almost anything passes
+        assert isinstance(is_new, bool)
+
+    def test_detect_new_condition_batch(self, router):
+        """Test detection with batch input."""
+        features = torch.randn(4, 256)
+
+        is_new, predicted_cond, confidence = router.detect_new_condition(
+            features, threshold=0.5
+        )
+
+        # Should average across batch
+        assert isinstance(is_new, bool)
+
+    def test_expand_classifier(self, router):
+        """Test classifier expansion for new conditions."""
+        old_num_conditions = router.num_conditions
+        old_output_dim = router.classifier[-1].out_features
+
+        router.expand_classifier(new_num_conditions=8, source_condition_id=0)
+
+        assert router.num_conditions == 8
+        assert router.classifier[-1].out_features == 8
+
+        # Test forward pass with expanded classifier
+        features = torch.randn(2, 256)
+        weights = router(features)
+        assert weights.shape == (2, 8)
+
+
+class TestDSAMoEExpertExpansion:
+    """Tests for DSA-MoE expert dynamic expansion."""
+
+    @pytest.fixture
+    def config(self):
+        return DSAMoEConfig(
+            num_conditions=3,
+            num_stages=2,
+            d_model=256,
+            bottleneck_dim=64,
+            sensor_dim=14,
+        )
+
+    @pytest.fixture
+    def moe(self, config):
+        return DSAMoE(config)
+
+    def test_expand_for_new_condition(self, moe):
+        """Test expanding expert matrix for new condition."""
+        initial_conditions = moe.num_conditions
+        initial_experts = len(moe.experts)
+
+        # Expand using condition 0 as source
+        new_condition_id = moe.expand_for_new_condition(source_condition_id=0)
+
+        assert new_condition_id == initial_conditions
+        assert moe.num_conditions == initial_conditions + 1
+        assert len(moe.experts) == initial_experts + moe.num_stages
+
+        # Test forward pass with expanded MoE
+        features = torch.randn(4, 30, 256)
+        x_raw = torch.randn(4, 30, 14)
+
+        output, aux = moe(features, x_raw)
+
+        assert output.shape == features.shape
+        assert aux['cond_weights'].shape[-1] == moe.num_conditions
+
+    def test_expand_preserves_device_and_dtype(self, config):
+        """Test that expansion preserves device and dtype consistency."""
+        # Create MoE on GPU-like device (use CPU for testing but check dtype)
+        device = torch.device('cpu')
+        dtype = torch.float32
+
+        moe = DSAMoE(config).to(device=device, dtype=dtype)
+
+        # Check initial parameters
+        initial_param = next(moe.experts.parameters())
+        assert initial_param.device == device
+        assert initial_param.dtype == dtype
+
+        # Expand
+        moe.expand_for_new_condition(source_condition_id=0, device=device)
+
+        # Check new parameters have same device and dtype
+        for expert in moe.experts:
+            for param in expert.parameters():
+                assert param.device == device, f"Expert parameter on {param.device}, expected {device}"
+                assert param.dtype == dtype, f"Expert parameter dtype {param.dtype}, expected {dtype}"
+
+    def test_expand_multiple_conditions(self, moe):
+        """Test expanding multiple times."""
+        initial_conditions = moe.num_conditions
+
+        # Add 2 new conditions
+        moe.expand_for_new_condition(source_condition_id=0)
+        moe.expand_for_new_condition(source_condition_id=1)
+
+        assert moe.num_conditions == initial_conditions + 2
+
+    def test_detect_new_condition_method(self, moe):
+        """Test DSA-MoE's new condition detection."""
+        features = torch.randn(4, 30, 256)
+
+        is_new, predicted_cond, confidence = moe.detect_new_condition(
+            features, threshold=0.9
+        )
+
+        assert isinstance(is_new, bool)
+        assert isinstance(predicted_cond, int)
+        assert 0 <= predicted_cond < moe.num_conditions
+        assert 0 <= confidence <= 1
+
+    def test_cloned_experts_have_same_weights(self, moe):
+        """Test that cloned experts have the same weights as source."""
+        # Expand using condition 0 as source
+        new_cond_id = moe.expand_for_new_condition(source_condition_id=0)
+
+        # Get source and new experts for each stage
+        for stage_idx in range(moe.num_stages):
+            source_expert = moe.get_expert(0, stage_idx)
+            new_expert = moe.get_expert(new_cond_id, stage_idx)
+
+            # Compare weights
+            for (n1, p1), (n2, p2) in zip(
+                source_expert.named_parameters(),
+                new_expert.named_parameters()
+            ):
+                assert torch.allclose(p1, p2), f"Weights differ for {n1}/{n2}"
+
+
+class TestConditionRouterExpansionDeviceDtype:
+    """Tests for ConditionRouter expansion device/dtype consistency."""
+
+    def test_expand_classifier_preserves_device_dtype(self):
+        """Test that classifier expansion preserves device and dtype."""
+        router = ConditionRouter(d_model=256, num_conditions=3)
+
+        # Move to specific device and dtype
+        device = torch.device('cpu')
+        dtype = torch.float32
+        router.to(device=device, dtype=dtype)
+
+        # Get original classifier properties
+        original_weight = router.classifier[3].weight
+        assert original_weight.device == device
+        assert original_weight.dtype == dtype
+
+        # Expand classifier
+        router.expand_classifier(new_num_conditions=5, source_condition_id=0)
+
+        # Check new classifier has same device and dtype
+        new_weight = router.classifier[3].weight
+        assert new_weight.device == device, f"Device mismatch: {new_weight.device} != {device}"
+        assert new_weight.dtype == dtype, f"Dtype mismatch: {new_weight.dtype} != {dtype}"
+
+        # Check shape expanded
+        assert new_weight.shape[0] == 5
+
+
+class TestStudentBranchMoEIntegration:
+    """Tests for StudentBranch MoE integration."""
+
+    def test_student_with_moe(self):
+        """Test StudentBranch with MoE."""
+        from models.moe.dsa_moe import DSAMoE, DSAMoEConfig
+        from models.tcsd.teacher_student import StudentBranch
+        from models.encoders import TransformerFeatureExtractor, GaussianRULHead
+
+        d_model = 256
+        feature_extractor = TransformerFeatureExtractor(
+            sensor_dim=14, d_model=d_model
+        )
+        rul_head = GaussianRULHead(d_model=d_model)
+
+        # Create MoE
+        moe_config = DSAMoEConfig(
+            num_conditions=6,
+            num_stages=3,
+            d_model=d_model,
+            bottleneck_dim=64,
+            sensor_dim=14,
+        )
+        moe = DSAMoE(moe_config)
+
+        # Create student with MoE
+        student = StudentBranch(
+            feature_extractor=feature_extractor,
+            rul_head=rul_head,
+            moe=moe,
+            d_model=d_model,
+        )
+
+        # Test forward pass
+        x = torch.randn(4, 30, 14)
+        condition_id = torch.tensor([0, 1, 2, 3])
+
+        mu, sigma = student(x, condition_id)
+
+        assert mu.shape == (4,)
+        assert sigma.shape == (4,)
+
+    def test_student_without_moe(self):
+        """Test StudentBranch without MoE (backward compatibility)."""
+        from models.tcsd.teacher_student import StudentBranch
+        from models.encoders import TransformerFeatureExtractor, GaussianRULHead
+
+        d_model = 256
+        feature_extractor = TransformerFeatureExtractor(
+            sensor_dim=14, d_model=d_model
+        )
+        rul_head = GaussianRULHead(d_model=d_model)
+
+        # Create student without MoE
+        student = StudentBranch(
+            feature_extractor=feature_extractor,
+            rul_head=rul_head,
+            moe=None,
+            d_model=d_model,
+        )
+
+        # Test forward pass
+        x = torch.randn(4, 30, 14)
+
+        mu, sigma = student(x)
+
+        assert mu.shape == (4,)
+        assert sigma.shape == (4,)
+
+
+class TestAutoSelectK:
+    """Tests for auto-select K functionality."""
+
+    def test_auto_select_k(self):
+        """Test automatic K selection using Silhouette score."""
+        from models.tcsd.prototype_manager import TrajectoryPrototypeManager
+        from utils.trajectory import TrajectoryShapeEncoder
+
+        encoder = TrajectoryShapeEncoder(feature_dim=128)
+        pm = TrajectoryPrototypeManager(
+            encoder, num_prototypes_per_condition=5
+        )
+
+        # Create trajectories with clear cluster structure
+        # 3 clusters with different patterns
+        trajectories = []
+        for i in range(10):
+            # Pattern 1: linear decay
+            trajectories.append(torch.linspace(100, 0, 50))
+        for i in range(10):
+            # Pattern 2: exponential decay
+            t = torch.linspace(0, 1, 50)
+            trajectories.append(100 * torch.exp(-3 * t))
+        for i in range(10):
+            # Pattern 3: slow decay
+            trajectories.append(torch.linspace(100, 50, 50))
+
+        k = pm.auto_select_k(trajectories, min_k=2, max_k=5)
+
+        assert 2 <= k <= 5
+        assert isinstance(k, int)
+
+    def test_auto_select_k_few_samples(self):
+        """Test auto-select K with few samples."""
+        from models.tcsd.prototype_manager import TrajectoryPrototypeManager
+        from utils.trajectory import TrajectoryShapeEncoder
+
+        encoder = TrajectoryShapeEncoder(feature_dim=128)
+        pm = TrajectoryPrototypeManager(
+            encoder, num_prototypes_per_condition=5
+        )
+
+        # Only 3 samples
+        trajectories = [
+            torch.linspace(100, 0, 50),
+            torch.linspace(100, 50, 50),
+            torch.linspace(100, 30, 50),
+        ]
+
+        k = pm.auto_select_k(trajectories, min_k=2, max_k=5)
+
+        # Should return min_k when too few samples
+        assert k == 2
+
+    def test_fit_kmeans_auto_k(self):
+        """Test K-means fitting with auto-selected K."""
+        from models.tcsd.prototype_manager import TrajectoryPrototypeManager
+        from utils.trajectory import TrajectoryShapeEncoder
+
+        encoder = TrajectoryShapeEncoder(feature_dim=128)
+        pm = TrajectoryPrototypeManager(
+            encoder, num_prototypes_per_condition=5
+        )
+
+        # Create trajectories with 3 clusters
+        trajectories = []
+        for i in range(10):
+            trajectories.append(torch.linspace(100, 0, 50))
+        for i in range(10):
+            t = torch.linspace(0, 1, 50)
+            trajectories.append(100 * torch.exp(-3 * t))
+        for i in range(10):
+            trajectories.append(torch.linspace(100, 50, 50))
+
+        success = pm.fit_kmeans_auto_k(
+            trajectories, condition_id=0, min_k=2, max_k=5
+        )
+
+        assert success is True
+        assert pm.is_initialized(0)
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])

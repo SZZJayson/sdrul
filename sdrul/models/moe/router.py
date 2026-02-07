@@ -67,9 +67,14 @@ class ConditionRouter(nn.Module):
         batch_size = features.size(0)
 
         if condition_id is not None:
+            # Clamp condition_id to valid range for one_hot
+            # This handles cases where condition_id exceeds num_conditions
+            # (e.g., during new condition detection before expansion)
+            condition_id_clamped = condition_id.long().clamp(0, self.num_conditions - 1)
+
             # Hard routing: one-hot encoding
             weights = F.one_hot(
-                condition_id.long(),
+                condition_id_clamped,
                 num_classes=self.num_conditions
             ).float()
         else:
@@ -105,6 +110,98 @@ class ConditionRouter(nn.Module):
         condition_id = torch.argmax(probs, dim=-1)
 
         return condition_id, probs
+
+    def detect_new_condition(
+        self,
+        features: torch.Tensor,
+        threshold: float = 0.5,
+    ) -> Tuple[bool, int, float]:
+        """
+        Detect whether input represents a new (unseen) operating condition.
+
+        Based on router confidence: if max probability is below threshold,
+        the input is likely from a new condition not seen during training.
+
+        Args:
+            features: Input features [batch, seq_len, d_model] or [batch, d_model]
+            threshold: Confidence threshold below which input is considered new
+
+        Returns:
+            is_new: Whether this appears to be a new condition
+            predicted_condition: ID of most similar existing condition
+            confidence: Maximum probability (confidence score)
+        """
+        if features.dim() == 3:
+            features = features.mean(dim=1)
+
+        # Get predictions
+        logits = self.classifier(features)
+        probs = F.softmax(logits / self.temperature, dim=-1)
+
+        # Use mean across batch if batch size > 1
+        if probs.dim() == 2 and probs.size(0) > 1:
+            probs = probs.mean(dim=0, keepdim=True)
+
+        max_prob, predicted_idx = probs.max(dim=-1)
+        confidence = max_prob.item()
+        predicted_condition = predicted_idx.item()
+
+        is_new = confidence < threshold
+
+        return is_new, predicted_condition, confidence
+
+    def expand_classifier(self, new_num_conditions: int, source_condition_id: int):
+        """
+        Expand the classifier to accommodate more conditions.
+
+        Args:
+            new_num_conditions: New total number of conditions
+            source_condition_id: Condition ID to clone weights from for new condition
+        """
+        if new_num_conditions <= self.num_conditions:
+            return
+
+        old_classifier = self.classifier
+        old_num_conditions = self.num_conditions
+
+        # Get device and dtype from old classifier
+        device = old_classifier[0].weight.device
+        dtype = old_classifier[0].weight.dtype
+
+        # Create new classifier with expanded output
+        self.classifier = nn.Sequential(
+            nn.Linear(self.d_model, self.d_model // 2),
+            nn.LayerNorm(self.d_model // 2),
+            nn.GELU(),
+            nn.Linear(self.d_model // 2, new_num_conditions),
+        )
+
+        # Move new classifier to same device and dtype
+        self.classifier.to(device=device, dtype=dtype)
+
+        # Copy weights from old classifier
+        with torch.no_grad():
+            # Copy first three layers (unchanged)
+            for i in range(3):
+                if hasattr(old_classifier[i], 'weight'):
+                    self.classifier[i].weight.copy_(old_classifier[i].weight)
+                if hasattr(old_classifier[i], 'bias'):
+                    self.classifier[i].bias.copy_(old_classifier[i].bias)
+
+            # Copy output layer weights for existing conditions
+            self.classifier[3].weight[:old_num_conditions].copy_(old_classifier[3].weight)
+            self.classifier[3].bias[:old_num_conditions].copy_(old_classifier[3].bias)
+
+            # Initialize new condition weights by cloning from source
+            for new_idx in range(old_num_conditions, new_num_conditions):
+                self.classifier[3].weight[new_idx].copy_(
+                    old_classifier[3].weight[source_condition_id]
+                )
+                self.classifier[3].bias[new_idx].copy_(
+                    old_classifier[3].bias[source_condition_id]
+                )
+
+        self.num_conditions = new_num_conditions
 
 
 class StageRouter(nn.Module):

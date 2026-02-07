@@ -48,6 +48,10 @@ class ContinualTrainerConfig:
     ewc_gamma: float = 0.9
     ewc_samples: int = 1000
 
+    # Expert expansion settings
+    auto_expand_experts: bool = False  # Auto-detect and expand for new conditions
+    new_condition_threshold: float = 0.5  # Confidence threshold for new condition detection
+
     # Warmup
     warmup_epochs: int = 5
 
@@ -128,13 +132,32 @@ class ContinualTrainer:
         self.logger = logging.getLogger(__name__)
 
     def _get_trainable_params(self) -> List[Dict]:
-        """Get all trainable parameters."""
-        params = list(self.model.parameters())
+        """
+        Get all trainable parameters.
+
+        Handles shared components between model and TCSD to avoid duplicates:
+        - Shared feature_extractor: in both model and TCSD
+        - Shared MoE: in both model.moe and TCSD.ts_pair.student.moe
+        """
+        # Track parameter IDs to avoid duplicates
+        param_ids = set()
+        params = []
+
+        # Add model parameters
+        for param in self.model.parameters():
+            if id(param) not in param_ids:
+                params.append(param)
+                param_ids.add(id(param))
+
+        # Add TCSD-specific params (skip shared components)
         if self.tcsd is not None:
-            # Only add TCSD-specific params (not shared feature_extractor)
             for name, param in self.tcsd.named_parameters():
-                if 'feature_extractor' not in name:
-                    params.append(param)
+                # Skip feature_extractor and MoE (they're shared with model)
+                if 'feature_extractor' not in name and 'ts_pair.student.moe' not in name:
+                    if id(param) not in param_ids:
+                        params.append(param)
+                        param_ids.add(id(param))
+
         return params
 
     def _compute_rul_loss(
@@ -184,6 +207,10 @@ class ContinualTrainer:
         x = x.to(self.device)
         y = y.to(self.device)
         condition_id = condition_id.to(self.device)
+
+        # Auto-detect and expand for new conditions (if enabled)
+        if getattr(self.config, 'auto_expand_experts', False):
+            self.check_and_expand_for_new_condition(x, condition_id)
 
         metrics = {}
         total_loss = torch.tensor(0.0, device=self.device)
@@ -376,6 +403,150 @@ class ContinualTrainer:
             self.ewc.consolidate(dataloader, self.config.ewc_samples)
 
         self.logger.info(f"Completed task {task_id}")
+
+    def check_and_expand_for_new_condition(
+        self,
+        x: torch.Tensor,
+        condition_id: torch.Tensor,
+        threshold: Optional[float] = None,
+    ) -> bool:
+        """
+        Check if input represents a new condition and expand experts if needed.
+
+        Uses the MoE's condition router to detect new conditions based on
+        prediction confidence. If a new condition is detected, expands the
+        expert matrix by cloning from the most similar existing condition.
+
+        Args:
+            x: Input sensor data [batch, seq_len, sensor_dim]
+            condition_id: Provided condition IDs [batch] (may be new)
+            threshold: Confidence threshold for new condition detection (uses config default if None)
+
+        Returns:
+            expanded: Whether expert expansion was performed
+        """
+        if threshold is None:
+            threshold = getattr(self.config, 'new_condition_threshold', 0.5)
+        if not hasattr(self.model, 'moe'):
+            return False
+
+        moe = self.model.moe
+
+        # Extract features for condition detection
+        with torch.no_grad():
+            features = self.model.feature_extractor(x.to(self.device))
+
+        # Check if this is a new condition
+        is_new, similar_condition, confidence = moe.detect_new_condition(
+            features, threshold
+        )
+
+        # Check if any condition_id exceeds current num_conditions
+        # This takes precedence over confidence-based detection
+        unique_cond_ids = torch.unique(condition_id)
+        max_cond_id = max(unique_cond_ids).item()
+
+        if max_cond_id >= moe.num_conditions:
+            # Condition ID is beyond current range - need expansion
+            # Expand to the target condition ID (not just +1)
+            # This handles non-consecutive condition IDs
+            target_num_conditions = max_cond_id + 1
+
+            self.logger.info(
+                f"Expanding from {moe.num_conditions} to {target_num_conditions} conditions "
+                f"(detected condition_id={max_cond_id})"
+            )
+
+            # Expand MoE incrementally to target
+            while moe.num_conditions < target_num_conditions:
+                # Determine source condition for cloning
+                # Use detect_new_condition if available, otherwise use last condition
+                if is_new:
+                    source_condition = similar_condition
+                else:
+                    source_condition = moe.num_conditions - 1
+
+                assigned_id = moe.expand_for_new_condition(
+                    source_condition_id=source_condition
+                )
+
+            self.logger.info(
+                f"Expanded MoE: {moe.num_conditions} conditions, "
+                f"{moe.num_experts} total experts"
+            )
+
+            # Also expand TCSD prototype manager if available
+            if self.tcsd is not None:
+                pm = self.tcsd.prototype_manager
+                if target_num_conditions > pm.num_conditions:
+                    # Resize prototype manager to target
+                    pm.num_conditions = target_num_conditions
+
+                    # Add buffers for any missing conditions
+                    for cond_id in range(pm.num_conditions):
+                        if cond_id not in pm.buffer:
+                            pm.buffer[cond_id] = []
+                        if cond_id not in pm.initialized:
+                            pm.initialized[cond_id] = False
+                        if cond_id not in pm._init_buffer:
+                            pm._init_buffer[cond_id] = []
+
+            # Add new parameters to optimizer
+            self._add_new_params_to_optimizer()
+
+            return True
+
+        return False
+
+    def _add_new_params_to_optimizer(self):
+        """
+        Add newly created parameters (e.g., from expert expansion) to the optimizer.
+
+        This is necessary because the optimizer is initialized once at startup,
+        but new parameters may be added dynamically during training.
+
+        Handles:
+        - Avoiding duplicate parameters from shared MoE between model and TCSD
+        - Properly deduplicating new_params list itself
+        """
+        # Get current parameters in optimizer
+        optim_param_ids = {id(p) for group in self.optimizer.param_groups for p in group['params']}
+
+        # Track which modules have been processed to avoid double-counting shared modules
+        processed_modules = set()
+
+        # Find new parameters not in optimizer
+        new_params = []
+        seen_new_param_ids = set()
+
+        # Helper to safely add parameters
+        def add_params_if_new(module, module_name):
+            nonlocal new_params, seen_new_param_ids
+            if id(module) in processed_modules:
+                return  # Skip already processed modules (e.g., shared MoE)
+            processed_modules.add(id(module))
+
+            for param in module.parameters():
+                if id(param) not in optim_param_ids and id(param) not in seen_new_param_ids:
+                    new_params.append(param)
+                    seen_new_param_ids.add(id(param))
+
+        # Process model parameters
+        add_params_if_new(self.model, "model")
+
+        # Process TCSD parameters (skip shared feature_extractor by checking module id)
+        if self.tcsd is not None:
+            add_params_if_new(self.tcsd, "tcsd")
+
+            # Explicitly skip feature_extractor if it's a separate attribute
+            if hasattr(self.tcsd, 'feature_extractor'):
+                fe_id = id(self.tcsd.feature_extractor)
+                # Remove any parameters from feature_extractor that were accidentally added
+                new_params = [p for p in new_params if id(p) not in {id(fp) for fp in self.tcsd.feature_extractor.parameters()}]
+
+        if new_params:
+            self.optimizer.add_param_group({'params': new_params})
+            self.logger.info(f"Added {len(new_params)} new parameters to optimizer")
 
     def evaluate(
         self,

@@ -191,17 +191,17 @@ def create_shared_model_and_tcsd(
     config: Optional[RULModelConfig] = None,
 ) -> Tuple['RULPredictionModel', 'TCSD']:
     """
-    Create RUL model and TCSD with shared feature extractor.
+    Create RUL model and TCSD with shared feature extractor and MoE.
 
     This is the recommended way to instantiate both components
-    to ensure they share the same feature extractor.
+    to ensure they share the same feature extractor and MoE.
 
     Args:
         config: RULModelConfig instance
 
     Returns:
         model: RULPredictionModel instance
-        tcsd: TCSD instance with shared feature extractor
+        tcsd: TCSD instance with shared feature extractor and MoE
     """
     from .tcsd import TCSD, TCSDConfig
 
@@ -234,10 +234,11 @@ def create_shared_model_and_tcsd(
         alpha_kl=0.5,  # Research-specified value
     )
 
-    # Create TCSD with shared feature extractor
+    # Create TCSD with shared feature extractor and MoE
     tcsd = TCSD(
         config=tcsd_config,
         feature_extractor=shared_feature_extractor,
+        moe=model.moe,  # Share MoE with student branch
     )
 
     return model, tcsd

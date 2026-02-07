@@ -88,12 +88,14 @@ class TCSD(nn.Module):
     Args:
         config: TCSDConfig instance
         feature_extractor: Optional shared feature extractor (for sharing with DSA-MoE)
+        moe: Optional shared MoE module (for student branch integration)
     """
 
     def __init__(
         self,
         config: TCSDConfig,
         feature_extractor: Optional[nn.Module] = None,
+        moe: Optional[nn.Module] = None,
     ):
         super().__init__()
         self.config = config
@@ -111,9 +113,10 @@ class TCSD(nn.Module):
             ema_decay=config.ema_decay,
         )
 
-        # Teacher-student pair (can share feature_extractor with DSA-MoE)
+        # Teacher-student pair (can share feature_extractor and MoE with DSA-MoE)
         self.ts_pair = TeacherStudentPair(
             feature_extractor=feature_extractor,
+            moe=moe,  # Pass shared MoE to student
             sensor_dim=config.sensor_dim,
             d_model=config.d_model,
             prototype_dim=config.prototype_dim,
@@ -249,7 +252,7 @@ class TCSD(nn.Module):
 
         # Forward through teacher and student
         teacher_output = self.teacher(x, prototypes, mask)
-        student_output = self.student(x, mask)
+        student_output = self.student(x, condition_id, mask)  # Pass condition_id for MoE routing
 
         # Compute distillation loss - always compute if we have valid prototypes
         if valid_mask.any():
@@ -320,7 +323,7 @@ class TCSD(nn.Module):
 
         # Forward
         teacher_output = self.teacher(x, prototypes, mask)
-        student_output = self.student(x, mask)
+        student_output = self.student(x, condition_id, mask)  # Pass condition_id for MoE routing
 
         # Combined loss
         loss, loss_dict = self.combined_loss(
@@ -370,11 +373,12 @@ class TCSD(nn.Module):
             prototypes = torch.stack(prototypes)
             return self.teacher(x, prototypes, mask)
         else:
-            return self.student(x, mask)
+            return self.student(x, condition_id, mask)  # Pass condition_id for MoE routing
 
     def forward(
         self,
         x: torch.Tensor,
+        condition_id: Optional[torch.Tensor] = None,
         mask: Optional[torch.Tensor] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
@@ -382,13 +386,14 @@ class TCSD(nn.Module):
 
         Args:
             x: Input sensor data [batch, seq_len, sensor_dim]
+            condition_id: Optional operating condition IDs [batch] (for MoE routing)
             mask: Optional attention mask
 
         Returns:
             mu: Predicted RUL mean [batch]
             sigma: Predicted RUL std [batch]
         """
-        return self.student(x, mask)
+        return self.student(x, condition_id, mask)
 
     def get_prototype_stats(self) -> Dict[str, any]:
         """Get statistics about prototype manager."""
