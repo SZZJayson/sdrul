@@ -1,11 +1,12 @@
 """
-Training script for the complete SDFT-DIMIX framework.
+Training script for the complete CLDR framework.
 
 Phase 3: Full Framework Integration
-- DCD (Degradation-Conditioned Diffusion) for generative replay
+- SmartReplayBuffer for intelligent experience replay
 - TCSD (Trajectory-Conditioned Self-Distillation) for adaptation
 - DSA-MoE (Degradation-Stage-Aware Mixture of Experts) for knowledge organization
 - EWC (Elastic Weight Consolidation) for regularization
+- Dynamic expert expansion for new operating conditions
 
 This script validates the complete continual learning framework for RUL prediction.
 """
@@ -36,10 +37,9 @@ from data import (
 )
 from models.rul_model import RULModelConfig, RULPredictionModel, create_shared_model_and_tcsd
 from models.tcsd import TCSD, TCSDConfig
-from models.dcd import DegradationConditionedDiffusion, DCDConfig
 from continual import ContinualTrainer, ContinualTrainerConfig
 from continual.ewc import EWCRegularizer
-from continual.replay import ReplayBuffer
+from continual.replay import SmartReplayBuffer
 
 
 def setup_logging(log_dir: str, experiment_name: str) -> logging.Logger:
@@ -174,108 +174,57 @@ def initialize_prototypes_from_data(
     return tcsd.initialize_prototypes(trajectories, condition_id)
 
 
-def train_dcd_on_task(
-    dcd: DegradationConditionedDiffusion,
-    dataloader: DataLoader,
-    optimizer: torch.optim.Optimizer,
-    device: torch.device,
-    condition_id: int,
-    num_epochs: int,
-    logger: logging.Logger,
-) -> List[float]:
-    """Pre-train DCD on a task's data."""
-    losses = []
-    dcd.train()
-
-    for epoch in range(num_epochs):
-        total_loss = 0.0
-        num_batches = 0
-
-        for batch in dataloader:
-            x, y, cond = batch
-            x = x.to(device)
-            y = y.to(device)
-
-            # Create RUL trajectory from scalar RUL
-            batch_size = x.size(0)
-            seq_len = x.size(1)
-            rul_traj = y.unsqueeze(-1).expand(-1, seq_len)
-
-            # Override condition_id for this task
-            cond_tensor = torch.full((batch_size,), condition_id, dtype=torch.long, device=device)
-
-            optimizer.zero_grad()
-            loss = dcd.compute_loss(x, rul_traj, cond_tensor)
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(dcd.parameters(), max_norm=1.0)
-            optimizer.step()
-            dcd.update_ema()
-
-            total_loss += loss.item()
-            num_batches += 1
-
-        avg_loss = total_loss / num_batches
-        losses.append(avg_loss)
-
-        if (epoch + 1) % 5 == 0:
-            logger.info(f'  DCD Epoch {epoch+1}/{num_epochs}: loss={avg_loss:.4f}')
-
-    return losses
-
-
 class FullFrameworkTrainer:
     """
-    Complete SDFT-DIMIX framework trainer.
+    Complete CLDR framework trainer.
 
     Integrates:
     - RULPredictionModel (with DSA-MoE)
     - TCSD for self-distillation
-    - DCD for generative replay
+    - SmartReplayBuffer for intelligent experience replay
     - EWC for regularization
-    - Experience replay buffer
+    - Dynamic expert expansion
     """
 
     def __init__(
         self,
         model: RULPredictionModel,
         tcsd: TCSD,
-        dcd: DegradationConditionedDiffusion,
         config: 'FullFrameworkConfig',
         device: torch.device,
         logger: logging.Logger,
     ):
         self.model = model.to(device)
         self.tcsd = tcsd.to(device)
-        self.dcd = dcd.to(device)
         self.config = config
         self.device = device
         self.logger = logger
+
+        # Smart replay buffer with prototype manager
+        self.replay_buffer = SmartReplayBuffer(
+            max_size=config.replay_buffer_size,
+            prototype_manager=tcsd.prototype_manager if config.use_prototype_guided_replay else None,
+            diversity_weight=config.diversity_weight,
+            uncertainty_weight=config.uncertainty_weight,
+            recency_weight=config.recency_weight,
+            base_replay_ratio=config.base_replay_ratio,
+        ) if config.use_smart_replay else None
 
         # EWC regularizer
         self.ewc = EWCRegularizer(
             model=model,
             ewc_lambda=config.lambda_ewc,
             online=True,
-            gamma=0.9,
+            gamma=config.ewc_gamma,
+            fisher_damping=config.fisher_damping,
         ) if config.use_ewc else None
-
-        # Experience replay buffer
-        self.replay_buffer = ReplayBuffer(
-            max_size=config.replay_buffer_size,
-        ) if config.use_experience_replay else None
 
         # Optimizer for model and TCSD
         params = list(model.parameters())
         for name, param in tcsd.named_parameters():
-            if 'feature_extractor' not in name:
+            if 'feature_extractor' not in name and 'moe' not in name:
                 params.append(param)
         self.optimizer = torch.optim.AdamW(params, lr=config.learning_rate)
-
-        # DCD optimizer (separate)
-        self.dcd_optimizer = torch.optim.AdamW(
-            dcd.get_training_parameters(),
-            lr=config.dcd_learning_rate,
-        )
 
         # Training state
         self.completed_tasks: List[int] = []
@@ -298,28 +247,23 @@ class FullFrameworkTrainer:
             'balance_loss': [],
         }
 
-        # Phase 1: Pre-train DCD on this task's data
-        if self.config.use_generative_replay and self.config.dcd_pretrain_epochs > 0:
-            self.logger.info(f'Pre-training DCD on task {task_id}...')
-            train_dcd_on_task(
-                self.dcd, train_loader, self.dcd_optimizer,
-                self.device, condition_id,
-                self.config.dcd_pretrain_epochs, self.logger,
-            )
-
-        # Phase 2: Initialize TCSD prototypes
+        # Phase 1: Initialize TCSD prototypes
         self.logger.info(f'Initializing TCSD prototypes for task {task_id}...')
         initialize_prototypes_from_data(
             self.tcsd, train_loader, condition_id,
             num_trajectories=self.config.num_prototypes,
         )
 
-        # Store prototypes for DCD replay
+        # Update replay buffer prototype manager
+        if self.replay_buffer and self.config.use_prototype_guided_replay:
+            self.replay_buffer.set_prototype_manager(self.tcsd.prototype_manager)
+
+        # Store prototypes for reference
         protos = self.tcsd.prototype_manager.get_all_prototypes(condition_id)
         if protos:
             self.prototype_buffer[condition_id] = [p.cpu() for p in protos]
 
-        # Phase 3: Main training loop
+        # Phase 2: Main training loop
         for epoch in range(num_epochs):
             self.model.train()
             self.tcsd.train()
@@ -347,19 +291,16 @@ class FullFrameworkTrainer:
                 L_balance = aux.get('load_balance_loss', torch.tensor(0.0, device=self.device))
 
                 # 3. TCSD distillation loss
-                L_distill, _ = self.tcsd.on_policy_step(x, cond)
+                L_distill = torch.tensor(0.0, device=self.device)
+                if self.config.lambda_distillation > 0:
+                    L_distill, _ = self.tcsd.on_policy_step(x, cond)
 
-                # 4. Generative replay loss (from DCD)
-                L_gen_replay = torch.tensor(0.0, device=self.device)
-                if self.config.use_generative_replay and self.completed_tasks and self.prototype_buffer:
-                    L_gen_replay = self._compute_generative_replay_loss()
+                # 4. Smart replay loss
+                L_replay = torch.tensor(0.0, device=self.device)
+                if self.replay_buffer is not None and len(self.replay_buffer) > 0:
+                    L_replay = self._compute_smart_replay_loss(task_id, condition_id)
 
-                # 5. Experience replay loss
-                L_exp_replay = torch.tensor(0.0, device=self.device)
-                if self.config.use_experience_replay and self.replay_buffer and len(self.replay_buffer) > 0:
-                    L_exp_replay = self._compute_experience_replay_loss(task_id)
-
-                # 6. EWC regularization
+                # 5. EWC regularization
                 L_ewc = torch.tensor(0.0, device=self.device)
                 if self.ewc and self.ewc.num_tasks > 0:
                     L_ewc = self.ewc.ewc_loss()
@@ -369,7 +310,7 @@ class FullFrameworkTrainer:
                     self.config.lambda_supervised * L_sup +
                     L_balance +
                     self.config.lambda_distillation * L_distill +
-                    self.config.lambda_replay * (L_gen_replay + L_exp_replay) +
+                    self.config.lambda_replay * L_replay +
                     L_ewc
                 )
 
@@ -378,15 +319,20 @@ class FullFrameworkTrainer:
                 torch.nn.utils.clip_grad_norm_(self.tcsd.parameters(), max_norm=1.0)
                 self.optimizer.step()
 
-                # Add to replay buffer
-                if self.replay_buffer:
-                    self.replay_buffer.add_batch(x.cpu(), y.cpu(), cond.cpu())
+                # Add to replay buffer with smart selection
+                if self.replay_buffer is not None:
+                    model_output = (mu.detach().cpu(), sigma.detach().cpu()) \
+                        if self.config.use_prototype_guided_replay else None
+                    self.replay_buffer.add_batch_with_selection(
+                        x.detach().cpu(), y.detach().cpu(), cond.detach().cpu(),
+                        model_output,
+                    )
 
                 # Track metrics
                 epoch_metrics['total_loss'] += total_loss.item()
                 epoch_metrics['supervised_loss'] += L_sup.item()
                 epoch_metrics['distillation_loss'] += L_distill.item()
-                epoch_metrics['replay_loss'] += (L_gen_replay + L_exp_replay).item()
+                epoch_metrics['replay_loss'] += L_replay.item()
                 epoch_metrics['ewc_loss'] += L_ewc.item()
                 epoch_metrics['balance_loss'] += L_balance.item()
                 num_batches += 1
@@ -412,54 +358,34 @@ class FullFrameworkTrainer:
 
         return history
 
-    def _compute_generative_replay_loss(self) -> torch.Tensor:
-        """Compute loss on DCD-generated replay samples."""
-        # Select random past condition
-        past_conditions = [c for c in self.prototype_buffer.keys() if c in [
-            cid for cid in self.completed_tasks
-        ]]
-
-        if not past_conditions:
-            return torch.tensor(0.0, device=self.device)
-
-        # Generate replay samples
+    def _compute_smart_replay_loss(
+        self,
+        current_task: int,
+        current_condition: int,
+    ) -> torch.Tensor:
+        """Compute loss on smart replay samples."""
         try:
-            replay_x, replay_cond = self.dcd.generate_replay_batch(
-                {c: self.prototype_buffer[c] for c in past_conditions[:2]},
-                samples_per_condition=self.config.replay_batch_size // max(1, len(past_conditions)),
-                use_ema=True,
-            )
-        except Exception as e:
-            self.logger.warning(f'DCD replay generation failed: {e}')
-            return torch.tensor(0.0, device=self.device)
-
-        replay_x = replay_x.to(self.device)
-        replay_cond = replay_cond.to(self.device)
-
-        # Forward through model
-        (mu, sigma), _ = self.model(replay_x, condition_id=replay_cond)
-
-        # Use TCSD distillation on replay samples
-        L_replay, _ = self.tcsd.on_policy_step(replay_x, replay_cond)
-
-        return L_replay
-
-    def _compute_experience_replay_loss(self, current_task: int) -> torch.Tensor:
-        """Compute loss on experience replay samples."""
-        try:
-            replay_x, replay_y, replay_cond = self.replay_buffer.sample_for_replay(
-                self.config.replay_batch_size,
-                current_task,
-                self.device,
+            x, y, task_ids, weights = self.replay_buffer.sample_weighted(
+                batch_size=self.config.replay_batch_size,
+                current_task=current_condition,
+                device=self.device,
             )
         except (ValueError, RuntimeError):
             return torch.tensor(0.0, device=self.device)
 
-        if replay_x.size(0) == 0:
+        if x.size(0) == 0:
             return torch.tensor(0.0, device=self.device)
 
-        (mu, sigma), _ = self.model(replay_x, condition_id=replay_cond)
-        L_replay = 0.5 * (torch.log(sigma ** 2 + 1e-6) + (replay_y - mu) ** 2 / (sigma ** 2 + 1e-6))
+        # Forward through model
+        (mu, sigma), _ = self.model(x, condition_id=task_ids)
+
+        # Supervised loss on replay samples with importance weights
+        L_replay = 0.5 * (torch.log(sigma ** 2 + 1e-6) + (y - mu) ** 2 / (sigma ** 2 + 1e-6))
+
+        # Apply importance weights
+        if weights is not None and weights.size(0) > 0:
+            L_replay = L_replay * weights.unsqueeze(-1)
+
         return L_replay.mean()
 
     def on_task_end(self, task_id: int, condition_id: int, dataloader: DataLoader):
@@ -471,10 +397,6 @@ class FullFrameworkTrainer:
             self.logger.info(f'Computing Fisher information for task {task_id}...')
             self.ewc.consolidate(dataloader, num_samples=self.config.ewc_samples)
 
-        # Update DCD EMA
-        if self.dcd:
-            self.dcd.update_ema()
-
 
 @dataclass
 class FullFrameworkConfig:
@@ -484,24 +406,28 @@ class FullFrameworkConfig:
     lambda_supervised: float = 1.0
     lambda_distillation: float = 1.0
     lambda_replay: float = 0.5
-    lambda_ewc: float = 1000.0
+    lambda_ewc: float = 5000.0
 
     # Learning rates
     learning_rate: float = 1e-4
-    dcd_learning_rate: float = 1e-4
 
     # Replay settings
-    use_generative_replay: bool = True
-    use_experience_replay: bool = True
+    use_smart_replay: bool = True
+    use_prototype_guided_replay: bool = True
     replay_buffer_size: int = 5000
     replay_batch_size: int = 16
 
-    # DCD settings
-    dcd_pretrain_epochs: int = 5
+    # Smart replay weights
+    diversity_weight: float = 0.3
+    uncertainty_weight: float = 0.3
+    recency_weight: float = 0.4
+    base_replay_ratio: float = 0.5
 
     # EWC settings
     use_ewc: bool = True
-    ewc_samples: int = 500
+    ewc_samples: int = 2000
+    ewc_gamma: float = 0.99
+    fisher_damping: float = 1e-4
 
     # TCSD settings
     num_prototypes: int = 50
@@ -541,24 +467,14 @@ def run_experiment(
     model_config = RULModelConfig.from_dataset_config(CMAPSS_CONFIG)
     model, tcsd = create_shared_model_and_tcsd(model_config)
 
-    # Create DCD
-    dcd_config = DCDConfig(
-        sensor_dim=CMAPSS_CONFIG.sensor_dim,
-        seq_len=args.seq_len,
-        num_timesteps=100,  # Reduced for faster training
-    )
-    dcd = DegradationConditionedDiffusion(dcd_config, num_conditions=CMAPSS_CONFIG.num_conditions)
-
     # Configure based on method
     config = FullFrameworkConfig(
         lambda_supervised=1.0,
         lambda_distillation=args.lambda_distill if method in ['full', 'tcsd_only'] else 0.0,
         lambda_replay=args.lambda_replay if method in ['full', 'replay_only'] else 0.0,
         lambda_ewc=args.lambda_ewc if method in ['full', 'ewc_only'] else 0.0,
-        use_generative_replay=(method in ['full', 'replay_only']),
-        use_experience_replay=(method in ['full', 'replay_only']),
+        use_smart_replay=(method in ['full', 'replay_only']),
         use_ewc=(method in ['full', 'ewc_only']),
-        dcd_pretrain_epochs=args.dcd_epochs if method in ['full', 'replay_only'] else 0,
         num_prototypes=args.num_prototypes,
         learning_rate=args.learning_rate,
     )
@@ -567,7 +483,6 @@ def run_experiment(
     trainer = FullFrameworkTrainer(
         model=model,
         tcsd=tcsd,
-        dcd=dcd,
         config=config,
         device=device,
         logger=logger,
@@ -615,7 +530,7 @@ def main(args):
     logger = setup_logging(args.log_dir, args.experiment_name)
 
     logger.info('='*60)
-    logger.info('Phase 3: Full Framework (SDFT-DIMIX) Experiment')
+    logger.info('Phase 3: Full Framework (CLDR) Experiment')
     logger.info('='*60)
     logger.info(f'Arguments: {vars(args)}')
 
@@ -732,7 +647,6 @@ if __name__ == '__main__':
 
     # Component settings
     parser.add_argument('--num_prototypes', type=int, default=50)
-    parser.add_argument('--dcd_epochs', type=int, default=5)
 
     # Training parameters
     parser.add_argument('--epochs_per_task', type=int, default=10)

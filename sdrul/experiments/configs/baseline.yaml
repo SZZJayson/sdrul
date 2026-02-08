@@ -1,0 +1,31 @@
+# Baseline configuration - No continual learning techniques
+# Only supervised learning on each task
+
+experiment:
+  name: "baseline"
+  description: "Baseline without any CL techniques"
+
+data:
+  data_dir: "data/processed"
+  sub_datasets: ["FD001", "FD003", "FD004"]
+  seq_len: 30
+  batch_size: 32
+  num_engines: 50
+
+model:
+  learning_rate: 1e-4
+
+loss_weights:
+  lambda_supervised: 1.0
+  lambda_distillation: 0.0
+  lambda_replay: 0.0
+  lambda_ewc: 0.0
+
+components:
+  num_prototypes: 50
+
+training:
+  epochs_per_task: 10
+
+output:
+  log_dir: "experiments/phase3/logs"

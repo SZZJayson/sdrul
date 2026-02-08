@@ -32,11 +32,13 @@ class EWCRegularizer:
         ewc_lambda: float = 1000.0,
         online: bool = True,
         gamma: float = 0.9,
+        fisher_damping: float = 1e-4,
     ):
         self.model = model
         self.ewc_lambda = ewc_lambda
         self.online = online
         self.gamma = gamma
+        self.fisher_damping = fisher_damping
 
         # Storage for Fisher information and optimal parameters
         self.fisher: Dict[str, torch.Tensor] = {}
@@ -140,6 +142,11 @@ class EWCRegularizer:
         # Normalize by number of samples
         for name in fisher_acc:
             fisher_acc[name] /= n_samples
+
+        # Apply Fisher damping to prevent numerical underflow
+        if self.fisher_damping > 0:
+            for name in fisher_acc:
+                fisher_acc[name] += self.fisher_damping
 
         # Update Fisher information
         if self.online and self.num_tasks > 0:

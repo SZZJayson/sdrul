@@ -480,14 +480,32 @@ class SmartReplayBuffer(ReplayBuffer):
         # 1. Diversity score (distance from prototype)
         if self.prototype_manager is not None:
             y_tensor = y if isinstance(y, torch.Tensor) else torch.tensor(y)
-            nearest = self.prototype_manager.get_nearest_prototype(y_tensor, task_id)
-            if nearest is not None:
-                _, similarity = nearest
-                diversity = 1.0 - similarity  # Further from prototype = more diverse
-                score += self.diversity_weight * diversity
+            # y is a scalar RUL value, not a trajectory sequence.
+            # Use RUL-based diversity: distance from stored prototype RUL centers.
+            if y_tensor.dim() == 0 or y_tensor.numel() == 1:
+                protos = self.prototype_manager.get_all_prototypes(task_id)
+                if protos:
+                    rul_val = y_tensor.float().item()
+                    # Compute distance from nearest prototype's mean RUL
+                    min_dist = float('inf')
+                    for proto in protos:
+                        proto_mean = proto.float().mean().item()
+                        dist = abs(rul_val - proto_mean)
+                        if dist < min_dist:
+                            min_dist = dist
+                    # Normalize: further from any prototype = more diverse
+                    diversity = min(min_dist / 125.0, 1.0)
+                    score += self.diversity_weight * diversity
+                else:
+                    score += self.diversity_weight * 1.0
             else:
-                # No prototype yet, give full diversity score
-                score += self.diversity_weight * 1.0
+                nearest = self.prototype_manager.get_nearest_prototype(y_tensor, task_id)
+                if nearest is not None:
+                    _, similarity = nearest
+                    diversity = 1.0 - similarity
+                    score += self.diversity_weight * diversity
+                else:
+                    score += self.diversity_weight * 1.0
         else:
             score += self.diversity_weight * 0.5  # Default mid-range
 
